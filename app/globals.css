@@ -1,0 +1,14 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic&display=swap');
+
+.dir-rtl {
+    font-family: 'Noto Naskh Arabic', sans-serif;
+    text-align: right;
+}
+
+.dir-rtl::placeholder {
+    text-align: right;
+} 
