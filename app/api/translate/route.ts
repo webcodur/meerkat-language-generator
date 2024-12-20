@@ -1,11 +1,13 @@
 import OpenAI from 'openai';
 import { NextResponse } from 'next/server';
 
-// OpenAI 클라이언트 초기화
-const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// 번역 프롬프트 템플릿
-const TRANSLATION_PROMPT_TEMPLATE = `다음 한국어 단어를 영어로 번역하고, 영문 키값과 아랍어 번역을 제공해주세요.
+/**
+ * 번역 API 엔드포인트
+ * POST 요청을 처리하여 한국어 텍스트를 영어와 아랍어로 번역
+ */
+export async function POST(request: Request) {
+	const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+	const TRANSLATION_PROMPT_TEMPLATE = `다음 한국어 단어를 영어로 번역하고, 영문 키값과 아랍어 번역을 제공해주세요.
 각 줄마다 다음과 같은 형식으로 응답해주세요:
 
 한국어: [한국어 단어]
@@ -22,11 +24,6 @@ const TRANSLATION_PROMPT_TEMPLATE = `다음 한국어 단어를 영어로 번역
 한국어 단어: {ko}
 {description}`;
 
-/**
- * 번역 API 엔드포인트
- * POST 요청을 처리하여 한국어 텍스트를 영어와 아랍어로 번역
- */
-export async function POST(request: Request) {
 	try {
 		// 요청 본문에서 한국어 텍스트와 설명 추출
 		const { ko, description } = await request.json();
