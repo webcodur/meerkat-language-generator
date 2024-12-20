@@ -35,9 +35,20 @@ export default function useTranslationForm() {
 		toIndex: number | null;
 	} | null>(null);
 
+	// 선택된 행이 없을 때 previewMove 초기화를 위한 이펙트 추가
+	useEffect(() => {
+		if (selectedRows.length === 0) {
+			setPreviewMove(null);
+		}
+	}, [selectedRows]);
+
 	/**
 	 * 서버에서 번역 데이터를 로드하는 함수
 	 * 초기 로드 및 새로고침 시 사용됩니다.
+	 *
+	 *
+	 * 위쪽으로 드래그 시 드래그 핸들이 안 따라오고
+	 * 아래로 드래그 시 드래그 핸들이 따라오는데, 이유 분석
 	 */
 	const loadTranslationData = async () => {
 		setIsLoading(true);

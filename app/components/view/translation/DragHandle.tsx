@@ -100,26 +100,47 @@ export default function DragHandle({
 		const sliderRect = sliderRef.current?.getBoundingClientRect();
 		if (!sliderRect) return null;
 
-		const relativeY = mouseY - sliderRect.top; // 슬라이더 내에서의 상대적 마우스 위치
+		const relativeY = mouseY - sliderRect.top;
 
-		// 마우스 위치와 가장 가까운 행 찾기
-		let closestIndex = null;
-		let closestDistance = Infinity;
-
-		rowPositions.forEach((position, index) => {
+		// 각 행의 경계 위치 계산
+		const rowBoundaries = rowPositions.map((position, index) => {
 			const row = document.querySelector(`[data-row-id="${index}"]`);
-			if (!row) return;
+			if (!row) return { top: position, bottom: position, index };
 
 			const rect = row.getBoundingClientRect();
-			const rowMiddle = position + rect.height / 2; // 각 행의 중앙점 계산
-			const distance = Math.abs(relativeY - rowMiddle); // 마우스와 행 중앙점 사이의 거리
-			if (distance < closestDistance) {
-				closestDistance = distance;
-				closestIndex = index;
-			}
+			return {
+				top: position,
+				bottom: position + rect.height,
+				index,
+			};
 		});
 
-		return closestIndex;
+		// 선택되지 않은 행들만 고려
+		const unselectedBoundaries = rowBoundaries.filter(
+			(_, index) => !selectedRows.includes(index)
+		);
+
+		// 마우스가 위치한 행 찾기
+		for (let i = 0; i < unselectedBoundaries.length; i++) {
+			const current = unselectedBoundaries[i];
+			const next = unselectedBoundaries[i + 1];
+
+			// 현재 행의 영역 내에 있는 경우
+			if (relativeY >= current.top && relativeY <= current.bottom) {
+				const middlePoint = (current.top + current.bottom) / 2;
+				// 행의 위쪽 절반에 있으면 현재 행, 아래쪽 절반에 있으면 다음 행의 인덱스
+				return relativeY < middlePoint ? current.index : (next?.index ?? current.index);
+			}
+		}
+
+		// 경계값 처리
+		if (relativeY <= unselectedBoundaries[0].top) return unselectedBoundaries[0].index;
+		if (relativeY >= unselectedBoundaries[unselectedBoundaries.length - 1].bottom) {
+			// 마지막 행의 실제 인덱스 반환
+			return rowBoundaries[rowBoundaries.length - 1].index;
+		}
+
+		return null;
 	};
 
 	/**
@@ -160,26 +181,67 @@ export default function DragHandle({
 			const targetIndex = getTargetIndex(e.clientY);
 			if (targetIndex !== null) {
 				const minSelectedIndex = Math.min(...selectedRows);
-				onPreviewMove?.(minSelectedIndex, targetIndex);
+				const maxSelectedIndex = Math.max(...selectedRows);
+				const selectedRowsCount = selectedRows.length;
+
+				// 맨 위에 있는 블록들을 위로 드래그할 때 처리
+				if (minSelectedIndex === 0) {
+					const isMovingUp = diff < 0;
+					if (isMovingUp) {
+						setDragOffset(0);
+						onPreviewMove?.(minSelectedIndex, 0);
+						return;
+					}
+				}
+
+				// 선택된 행들의 실제 높이 계산
+				const selectedRowsHeight = selectedRows.reduce((total, index) => {
+					const row = document.querySelector(`[data-row-id="${index}"]`);
+					if (!row) return total;
+					return total + row.getBoundingClientRect().height;
+				}, 0);
+
+				// 이동 가능 범위 계산
+				const firstRowTop = rowPositions[0];
+				const lastRowElement = document.querySelector(`[data-row-id="${rows.length - 1}"]`);
+				const lastRowRect = lastRowElement?.getBoundingClientRect();
+				const lastRowBottom = lastRowRect
+					? rowPositions[rowPositions.length - 1] + lastRowRect.height
+					: rowPositions[rowPositions.length - 1];
+
+				// 이동 제한 범위 계산
+				const currentTop = rowPositions[minSelectedIndex];
+				const maxOffset = lastRowBottom - selectedRowsHeight - currentTop;
+				const minOffset = -currentTop;
+
+				// 실제 적용할 오프셋 계산
+				const limitedOffset = Math.max(minOffset, Math.min(maxOffset, diff));
+
+				// 맨 위나 맨 아래로 이동할 때 특별 처리
+				let effectiveTargetIndex = targetIndex;
+				if (targetIndex === 0 && minSelectedIndex === 0) {
+					effectiveTargetIndex = 0;
+				} else if (targetIndex >= rows.length - selectedRowsCount) {
+					effectiveTargetIndex = rows.length - selectedRowsCount;
+				}
+
+				onPreviewMove?.(minSelectedIndex, effectiveTargetIndex);
 
 				const targetRow = document.querySelector(
-					`[data-row-id="${targetIndex}"]`
+					`[data-row-id="${effectiveTargetIndex}"]`
 				) as HTMLElement;
+
 				if (targetRow) {
 					document.querySelectorAll('.preview-move').forEach((el) => {
 						el.classList.remove('preview-move');
 					});
 					targetRow.classList.add('preview-move');
 
-					const maxOffset = totalHeight - rangeHeight;
-					const minOffset = 0;
-					const limitedOffset = Math.max(minOffset, Math.min(diff, maxOffset));
-
 					setDragOffset(limitedOffset);
 				}
 			}
 		},
-		[isDragging, startY, totalHeight, rangeHeight, selectedRows, onPreviewMove, getTargetIndex]
+		[isDragging, startY, selectedRows, onPreviewMove, getTargetIndex, rowPositions, rows.length]
 	);
 
 	const handleMouseUp = () => {

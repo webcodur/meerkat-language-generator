@@ -66,19 +66,38 @@ export default function TranslationForm() {
 	const handleMoveRows = () => {
 		if (!previewMove || previewMove.toIndex === null) return;
 
+		// 현재 선택된 행들의 인덱스 범위 확인
+		const minSelectedIndex = Math.min(...selectedRows);
+		const maxSelectedIndex = Math.max(...selectedRows);
+		const targetIndex = previewMove.toIndex;
+
+		// 이동이 필요없는 경우 (이미 맨 위에 있고 위로 이동하려 할 때)
+		if (minSelectedIndex === 0 && targetIndex === 0) {
+			setPreviewMove(null);
+			return;
+		}
+
+		// 이동이 필요없는 경우 (이미 맨 아래에 있고 아래로 이동하려 할 때)
+		if (maxSelectedIndex === rows.length - 1 && targetIndex === rows.length - 1) {
+			setPreviewMove(null);
+			return;
+		}
+
 		// 선택된 행들을 새 위치로 이동
 		const newRows = [...rows];
 		const selectedRowsData = selectedRows.map((index) => newRows[index]);
 		const remainingRows = newRows.filter((_, index) => !selectedRows.includes(index));
 
-		remainingRows.splice(previewMove.toIndex, 0, ...selectedRowsData);
+		// 새로운 위치에 선택된 행들 삽입
+		remainingRows.splice(targetIndex, 0, ...selectedRowsData);
 
 		// 선택된 행들의 새 인덱스 계산
 		const newSelectedRows = Array.from(
 			{ length: selectedRows.length },
-			(_, i) => previewMove.toIndex + i
+			(_, i) => targetIndex + i
 		);
 
+		// 상태 업데이트
 		setRows(remainingRows);
 		setSelectedRows(newSelectedRows);
 		setPreviewMove(null);
