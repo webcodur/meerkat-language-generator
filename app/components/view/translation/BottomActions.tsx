@@ -9,6 +9,7 @@ interface BottomActionsProps {
 	isLocked: boolean; // 편집 잠금 상태
 	disableActions: boolean; // 액션 비활성화 상태
 	rows: Translation[]; // 번역 데이터 배열
+	onClearSelection?: () => void; // 선택 해제 핸들러 함수
 }
 
 export default function BottomActions({
@@ -16,6 +17,7 @@ export default function BottomActions({
 	isLocked,
 	disableActions,
 	rows,
+	onClearSelection,
 }: BottomActionsProps) {
 	// 번역 데이터 저장 핸들러
 	const handleSave = async () => {
@@ -98,56 +100,68 @@ export default function BottomActions({
 
 	// 하단 고정 액션 버튼 UI 렌더링
 	return (
-		<div className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t">
+		<div className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t z-[100]">
 			<div className="px-6 mx-auto max-w-7xl">
-				<div className="flex justify-center space-x-4">
-					{/* 행 추가 버튼 */}
-					<button
-						type="button"
-						onClick={onDuplicate}
-						disabled={disableActions}
-						className={`px-6 py-2 text-white rounded
-              ${disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
-					>
-						+ 행 추가
-					</button>
-					{/* DB 저장 버튼 */}
-					<button
-						type="button"
-						onClick={handleSave}
-						disabled={isLocked}
-						className={`px-6 py-2 text-white rounded ${
-							isLocked
-								? 'bg-gray-400 cursor-not-allowed'
-								: 'bg-blue-500 hover:bg-blue-600'
-						}`}
-					>
-						DB저장 (gist)
-					</button>
-					{/* 구분선 */}
-					<div className="w-px h-6 my-auto bg-gray-300"></div>
-					{/* 각 언어별 JSON 다운로드 버튼 */}
-					<button
-						type="button"
-						onClick={() => handleDownload('ko')}
-						className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
-					>
-						ko.json
-					</button>
-					<button
-						type="button"
-						onClick={() => handleDownload('en')}
-						className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
-					>
-						en.json
-					</button>
-					<button
-						type="button"
-						onClick={() => handleDownload('ar')}
-						className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
-					>
-						ar.json
-					</button>
+				<div className="flex flex-col space-y-4">
+					<div className="flex justify-center space-x-4">
+						{/* 선택 해제 버튼 */}
+						<button
+							type="button"
+							onClick={onClearSelection}
+							disabled={!disableActions}
+							className={`px-6 py-2 text-white rounded
+								${!disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+						>
+							선택해제
+						</button>
+						{/* 행 추가 버튼 */}
+						<button
+							type="button"
+							onClick={onDuplicate}
+							disabled={disableActions}
+							className={`px-6 py-2 text-white rounded
+								${disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
+						>
+							+ 행 추가
+						</button>
+						{/* DB 저장 버튼 */}
+						<button
+							type="button"
+							onClick={handleSave}
+							disabled={isLocked}
+							className={`px-6 py-2 text-white rounded ${
+								isLocked
+									? 'bg-gray-400 cursor-not-allowed'
+									: 'bg-blue-500 hover:bg-blue-600'
+							}`}
+						>
+							DB저장 (gist)
+						</button>
+					</div>
+					<div className="flex justify-center space-x-4">
+						{/* 각 언어별 JSON 다운로드 버튼 */}
+						<button
+							type="button"
+							onClick={() => handleDownload('ko')}
+							className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
+						>
+							ko.json
+						</button>
+						<button
+							type="button"
+							onClick={() => handleDownload('en')}
+							className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
+						>
+							en.json
+						</button>
+						<button
+							type="button"
+							onClick={() => handleDownload('ar')}
+							className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
+						>
+							ar.json
+						</button>
+					</div>
 				</div>
 			</div>
 		</div>

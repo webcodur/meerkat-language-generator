@@ -178,68 +178,74 @@ export default function DragHandle({
 			const mouseY = e.clientY - sliderRect.top;
 			const diff = mouseY - startY;
 
-			const targetIndex = getTargetIndex(e.clientY);
-			if (targetIndex !== null) {
-				const minSelectedIndex = Math.min(...selectedRows);
-				const maxSelectedIndex = Math.max(...selectedRows);
-				const selectedRowsCount = selectedRows.length;
+			// 성능 최적화: requestAnimationFrame 사용
+			requestAnimationFrame(() => {
+				const targetIndex = getTargetIndex(e.clientY);
+				if (targetIndex !== null) {
+					const minSelectedIndex = Math.min(...selectedRows);
+					const maxSelectedIndex = Math.max(...selectedRows);
+					const selectedRowsCount = selectedRows.length;
 
-				// 맨 위에 있는 블록들을 위로 드래그할 때 처리
-				if (minSelectedIndex === 0) {
-					const isMovingUp = diff < 0;
-					if (isMovingUp) {
-						setDragOffset(0);
-						onPreviewMove?.(minSelectedIndex, 0);
-						return;
+					// 맨 위에 있는 블록들을 위로 드래그할 때 처리
+					if (minSelectedIndex === 0) {
+						const isMovingUp = diff < 0;
+						if (isMovingUp) {
+							setDragOffset(0);
+							onPreviewMove?.(minSelectedIndex, 0);
+							return;
+						}
+					}
+
+					// 선택된 행들의 실제 높이 계산 최적화
+					const selectedRowsHeight = selectedRows.reduce((total, index) => {
+						const row = document.querySelector(`[data-row-id="${index}"]`);
+						if (!row) return total;
+						return total + row.getBoundingClientRect().height;
+					}, 0);
+
+					// 이동 가능 범위 계산
+					const firstRowTop = rowPositions[0];
+					const lastRowElement = document.querySelector(
+						`[data-row-id="${rows.length - 1}"]`
+					);
+					const lastRowRect = lastRowElement?.getBoundingClientRect();
+					const lastRowBottom = lastRowRect
+						? rowPositions[rowPositions.length - 1] + lastRowRect.height
+						: rowPositions[rowPositions.length - 1];
+
+					// 이동 제한 범위 계산
+					const currentTop = rowPositions[minSelectedIndex];
+					const maxOffset = lastRowBottom - selectedRowsHeight - currentTop;
+					const minOffset = -currentTop;
+
+					// 실제 적용할 오프셋 계산
+					const limitedOffset = Math.max(minOffset, Math.min(maxOffset, diff));
+
+					// 맨 위나 맨 아래로 이동할 때 특별 처리
+					let effectiveTargetIndex = targetIndex;
+					if (targetIndex === 0 && minSelectedIndex === 0) {
+						effectiveTargetIndex = 0;
+					} else if (targetIndex >= rows.length - selectedRowsCount) {
+						effectiveTargetIndex = rows.length - selectedRowsCount;
+					}
+
+					onPreviewMove?.(minSelectedIndex, effectiveTargetIndex);
+
+					// DOM 조작 최적화
+					const targetRow = document.querySelector(
+						`[data-row-id="${effectiveTargetIndex}"]`
+					) as HTMLElement;
+
+					if (targetRow) {
+						document.querySelectorAll('.preview-move').forEach((el) => {
+							el.classList.remove('preview-move');
+						});
+						targetRow.classList.add('preview-move');
+
+						setDragOffset(limitedOffset);
 					}
 				}
-
-				// 선택된 행들의 실제 높이 계산
-				const selectedRowsHeight = selectedRows.reduce((total, index) => {
-					const row = document.querySelector(`[data-row-id="${index}"]`);
-					if (!row) return total;
-					return total + row.getBoundingClientRect().height;
-				}, 0);
-
-				// 이동 가능 범위 계산
-				const firstRowTop = rowPositions[0];
-				const lastRowElement = document.querySelector(`[data-row-id="${rows.length - 1}"]`);
-				const lastRowRect = lastRowElement?.getBoundingClientRect();
-				const lastRowBottom = lastRowRect
-					? rowPositions[rowPositions.length - 1] + lastRowRect.height
-					: rowPositions[rowPositions.length - 1];
-
-				// 이동 제한 범위 계산
-				const currentTop = rowPositions[minSelectedIndex];
-				const maxOffset = lastRowBottom - selectedRowsHeight - currentTop;
-				const minOffset = -currentTop;
-
-				// 실제 적용할 오프셋 계산
-				const limitedOffset = Math.max(minOffset, Math.min(maxOffset, diff));
-
-				// 맨 위나 맨 아래로 이동할 때 특별 처리
-				let effectiveTargetIndex = targetIndex;
-				if (targetIndex === 0 && minSelectedIndex === 0) {
-					effectiveTargetIndex = 0;
-				} else if (targetIndex >= rows.length - selectedRowsCount) {
-					effectiveTargetIndex = rows.length - selectedRowsCount;
-				}
-
-				onPreviewMove?.(minSelectedIndex, effectiveTargetIndex);
-
-				const targetRow = document.querySelector(
-					`[data-row-id="${effectiveTargetIndex}"]`
-				) as HTMLElement;
-
-				if (targetRow) {
-					document.querySelectorAll('.preview-move').forEach((el) => {
-						el.classList.remove('preview-move');
-					});
-					targetRow.classList.add('preview-move');
-
-					setDragOffset(limitedOffset);
-				}
-			}
+			});
 		},
 		[isDragging, startY, selectedRows, onPreviewMove, getTargetIndex, rowPositions, rows.length]
 	);
@@ -330,40 +336,30 @@ export default function DragHandle({
 	// 선택된 행이 없으면 렌더링하지 않음
 	if (selectedRows.length === 0) return null;
 
-	// 선택된 영역 표시 바 스타일 계산
-	const getRangeBarStyle = () => {
+	// 선택된 영역 표시 바 스타일 계산 최적화
+	const getRangeBarStyle = useCallback(() => {
 		const baseStyle = {
 			height: `${rangeHeight}px`,
 			top: `${handlePosition - rangeHeight / 2 + 14}px`,
 			transition: isDragging ? 'none' : 'all 0.15s ease-out',
+			transform: isDragging ? `translateY(${dragOffset}px)` : 'none',
+			willChange: isDragging ? 'transform' : 'auto',
 		};
 
-		if (isDragging) {
-			return {
-				...baseStyle,
-				transform: `translateY(${dragOffset}px)`,
-			};
-		}
-
 		return baseStyle;
-	};
+	}, [rangeHeight, handlePosition, isDragging, dragOffset]);
 
-	// 드래그 핸들 스타일 계산
-	const getHandleStyle = () => {
+	// 드래그 핸들 스타일 계산 최적화
+	const getHandleStyle = useCallback(() => {
 		const baseStyle = {
 			top: `${handlePosition}px`,
 			transition: isDragging ? 'none' : 'all 0.15s ease-out',
+			transform: isDragging ? `translateY(${dragOffset}px)` : 'none',
+			willChange: isDragging ? 'transform' : 'auto',
 		};
 
-		if (isDragging) {
-			return {
-				...baseStyle,
-				transform: `translateY(${dragOffset}px)`,
-			};
-		}
-
 		return baseStyle;
-	};
+	}, [handlePosition, isDragging, dragOffset]);
 
 	return (
 		<div

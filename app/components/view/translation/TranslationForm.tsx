@@ -55,9 +55,28 @@ export default function TranslationForm() {
 	const handleRowSelect = (index: number, selected: boolean) => {
 		setSelectedRows((prev) => {
 			if (selected) {
-				return [...prev, index].sort((a, b) => a - b);
+				// 이미 선택된 행이 있는 경우
+				if (prev.length > 0) {
+					const minSelected = Math.min(...prev);
+					const maxSelected = Math.max(...prev);
+
+					// 현재 선택하려는 행이 기존 선택 범위에 인접해있는지 확인
+					if (index === minSelected - 1 || index === maxSelected + 1) {
+						return [...prev, index].sort((a, b) => a - b);
+					}
+					// 범위를 벗어난 선택인 경우 새로운 선택으로 시작
+					return [index];
+				}
+				// 첫 선택인 경우
+				return [index];
 			} else {
-				return prev.filter((i) => i !== index);
+				// 선택 해제 시 해당 인덱스가 범위의 끝에 있는 경우에만 허용
+				const minSelected = Math.min(...prev);
+				const maxSelected = Math.max(...prev);
+				if (index === minSelected || index === maxSelected) {
+					return prev.filter((i) => i !== index);
+				}
+				return prev;
 			}
 		});
 	};
@@ -115,7 +134,7 @@ export default function TranslationForm() {
 	// 메인 폼 렌더링
 	return (
 		<div className="mx-auto max-w-7xl">
-			<div className="relative p-6 pb-20 border rounded-lg">
+			<div className="relative p-6 pb-32 border rounded-lg">
 				<ModelInfo model={'gpt-4o-mini'} />
 				<TableHeader />
 				<div className="relative">
@@ -151,6 +170,7 @@ export default function TranslationForm() {
 					isLocked={isLocked}
 					disableActions={selectedRows.length > 0}
 					rows={rows}
+					onClearSelection={() => setSelectedRows([])}
 				/>
 
 				<LockButton isLocked={isLocked} onShowModal={() => setShowModal(true)} />
