@@ -26,6 +26,14 @@ export default function LockButton({ isLocked, onShowModal }: LockButtonProps) {
 	const buttonClass =
 		'fixed w-12 h-12 flex items-center justify-center text-white bg-primary-500 rounded-full hover:bg-primary-600 z-[120]';
 
+	const handleLockClick = () => {
+		if (!isLocked) {
+			alert('이미 잠금이 해제되어 있습니다.');
+			return;
+		}
+		onShowModal();
+	};
+
 	return (
 		<>
 			<button
@@ -34,7 +42,7 @@ export default function LockButton({ isLocked, onShowModal }: LockButtonProps) {
 			>
 				<FaArrowUp className="w-5 h-5" />
 			</button>
-			<button onClick={onShowModal} className={`${buttonClass} bottom-10 right-6`}>
+			<button onClick={handleLockClick} className={`${buttonClass} bottom-10 right-6`}>
 				{isLocked ? <FaLock className="w-5 h-5" /> : <FaLockOpen className="w-5 h-5" />}
 			</button>
 		</>

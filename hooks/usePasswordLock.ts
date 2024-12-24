@@ -17,6 +17,7 @@ export default function usePasswordLock() {
 			setShowModal(false);
 			setPassword('');
 			setPasswordError(false);
+			alert('잠금이 성공적으로 해제되었습니다.');
 		} else {
 			setPasswordError(true);
 		}
