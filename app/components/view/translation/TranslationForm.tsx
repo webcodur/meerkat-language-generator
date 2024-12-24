@@ -2,7 +2,6 @@
 import { Translation } from '@/types/translate';
 import type { PreviewMoveType } from '@/hooks/useRowSelection';
 
-import ModelInfo from './modelInfo/ModelInfo';
 import LockButton from './lockButton/LockButton';
 import PasswordModal from './passwordModal/PasswordModal';
 import TableHeader from './tableHeader/TableHeader';
@@ -110,10 +109,18 @@ export default function TranslationForm() {
 	};
 
 	// 로딩 중이거나 에러 상태일 때의 렌더링
+	// if (true) return <LoadingState />;
 	if (isLoading) return <LoadingState />;
 	if (error) return <ErrorState error={error} onRefresh={loadTranslationData} />;
 
 	// 메인 폼 렌더링
+	const translatedCount = rows.filter(
+		(row) => row.englishTranslation && row.arabicTranslation
+	).length;
+	const totalRows = rows.length;
+	const untranslatedCount = totalRows - translatedCount;
+	const completionRate = totalRows > 0 ? (translatedCount / totalRows) * 100 : 0;
+
 	return (
 		<div className="flex w-full">
 			<div className="relative p-6 pb-32 border rounded-lg">
@@ -147,7 +154,20 @@ export default function TranslationForm() {
 				</div>
 
 				<BottomActions
-					onDuplicate={handleDuplicate}
+					onDuplicate={() =>
+						setRows((prevRows) => {
+							const timestamp = new Date().getTime();
+							const newRow: Translation = {
+								englishKey: `temp_${timestamp}`,
+								arabicTranslation: '',
+								koreanWord: '',
+								englishTranslation: '',
+								isVerified: false,
+								koreanDescription: '',
+							};
+							return [...prevRows, newRow];
+						})
+					}
 					isLocked={isLocked}
 					disableActions={selectedRows.length > 0}
 					rows={rows}
@@ -164,6 +184,20 @@ export default function TranslationForm() {
 						onClose={handleModalClose}
 					/>
 				)}
+
+				{/* 통계 */}
+				<div className="fixed bottom-0 left-0 m-6 p-4 bg-gray-100 border-t z-[100] w-[250px] text-center">
+					<div className="flex flex-col space-y-2 ">
+						<div className="flex justify-between w-full ">
+							<p className="text-lg">번역 완료 비율:</p>
+							<p className="text-lg">{completionRate.toFixed(2)}%</p>
+						</div>
+						<div className="flex justify-between w-full">
+							<p className="text-lg">미번역 항목 수:</p>
+							<p className="text-lg">{untranslatedCount}</p>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	);

@@ -2,6 +2,7 @@ import React from 'react';
 import handleDownload from './handleDownload';
 import { Translation } from '@/types/translate';
 import { FiDownload } from 'react-icons/fi';
+import { highTechStyle } from '@/data/constant/highTechStyle';
 
 interface JsonDownLoaderProps {
 	rows: Translation[];
@@ -23,7 +24,7 @@ const JsonDownLoader = ({ rows }: JsonDownLoaderProps) => {
 	};
 
 	const buttonBaseStyle =
-		'w-[100px] p-2 text-white rounded flex items-center justify-center space-x-2 font-medium text-md';
+		'w-[100px] p-2 ' + highTechStyle;
 
 	return (
 		<div className="flex justify-center space-x-4">
@@ -33,7 +34,7 @@ const JsonDownLoader = ({ rows }: JsonDownLoaderProps) => {
 					key={lang}
 					type="button"
 					onClick={() => handleDownload(rows, lang as 'ko' | 'en' | 'ar')}
-					className={`${buttonBaseStyle} bg-purple-500 hover:bg-purple-600`}
+					className={`${buttonBaseStyle} bg-light-gray text-dark-gray hover:bg-gray-200`}
 				>
 					<FiDownload className="w-4 h-4" />
 					<span>{langMap[lang]}</span>
@@ -44,7 +45,7 @@ const JsonDownLoader = ({ rows }: JsonDownLoaderProps) => {
 			<button
 				type="button"
 				onClick={downloadAll}
-				className={`${buttonBaseStyle} bg-green-500 hover:bg-green-600`}
+				className={`${buttonBaseStyle} bg-light-gray text-dark-gray hover:bg-gray-200`}
 			>
 				<FiDownload className="w-4 h-4" />
 				<span>전체</span>

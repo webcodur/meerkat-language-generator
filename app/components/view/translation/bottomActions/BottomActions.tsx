@@ -2,6 +2,7 @@ import { Translation } from '@/types/translate'; // 번역 타입
 import { saveTranslations } from '@/app/actions/translationActions'; // 번역 데이터 저장을 위한 액션
 import JsonDownLoader from './jsonDownLoader/JsonDownLoader';
 import { FaPlus, FaDatabase, FaUndo } from 'react-icons/fa';
+import { highTechStyle } from '@/data/constant/highTechStyle';
 
 // 컴포넌트 props 인터페이스 정의
 interface BottomActionsProps {
@@ -12,15 +13,32 @@ interface BottomActionsProps {
 	onClearSelection?: () => void; // 선택 해제 핸들러 함수
 }
 
+// 행 복제 핸들러 함수
+const handleDuplicate = (rows: Translation[]) => {
+	const timestamp = new Date().getTime();
+	const newRow: Translation = {
+		englishKey: `temp_${timestamp}`,
+		arabicTranslation: '',
+		koreanWord: '',
+		englishTranslation: '',
+		isVerified: false,
+		koreanDescription: '',
+	};
+	rows.push(newRow);
+};
+
+const BUTTON_DISABLED_CLASS = 'bg-gray-500 text-gray-300 cursor-not-allowed';
+const BUTTON_ENABLED_CLASS = 'bg-light-gray text-dark-gray hover:bg-gray-200';
+const ICON_CLASS = 'w-4 h-4 mr-2';
+
 export default function BottomActions({
-	onDuplicate,
+	onDuplicate = () => handleDuplicate(rows), // rows를 인자로 전달
 	isLocked,
 	disableActions,
 	rows,
 	onClearSelection,
 }: BottomActionsProps) {
-	const buttonClass =
-		'px-6 py-2 text-white rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200';
+	const buttonClass = 'px-6 py-2 ' + highTechStyle;
 
 	// 번역 데이터 저장 핸들러
 	const handleSave = async () => {
@@ -76,10 +94,11 @@ export default function BottomActions({
 							type="button"
 							onClick={onClearSelection}
 							disabled={!disableActions}
-							className={`${buttonClass}
-								${!disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
+							className={`${buttonClass} ${
+								!disableActions ? BUTTON_DISABLED_CLASS : BUTTON_ENABLED_CLASS
+							}`}
 						>
-							<FaUndo className="w-4 h-4" />
+							<FaUndo className={ICON_CLASS} />
 							선택해제
 						</button>
 
@@ -87,10 +106,11 @@ export default function BottomActions({
 							type="button"
 							onClick={onDuplicate}
 							disabled={disableActions}
-							className={`${buttonClass}
-								${disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
+							className={`${buttonClass} ${
+								disableActions ? BUTTON_DISABLED_CLASS : BUTTON_ENABLED_CLASS
+							}`}
 						>
-							<FaPlus className="w-4 h-4" />행 추가
+							<FaPlus className={ICON_CLASS} />행 추가
 						</button>
 
 						<button
@@ -98,12 +118,10 @@ export default function BottomActions({
 							onClick={handleSave}
 							disabled={isLocked}
 							className={`${buttonClass} ${
-								isLocked
-									? 'bg-gray-400 cursor-not-allowed'
-									: 'bg-blue-500 hover:bg-blue-600'
+								isLocked ? BUTTON_DISABLED_CLASS : BUTTON_ENABLED_CLASS
 							}`}
 						>
-							<FaDatabase className="w-4 h-4" />
+							<FaDatabase className={ICON_CLASS} />
 							DB저장
 						</button>
 					</div>

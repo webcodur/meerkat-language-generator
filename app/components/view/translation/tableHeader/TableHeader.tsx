@@ -1,7 +1,7 @@
 import { COLUMN_WIDTHS } from '@/data/constant/columnWidths';
 
 const headerCellStyle =
-	'text-center flex items-center justify-center text-base font-medium text-primary-700';
+	'text-center flex items-center justify-center text-base font-medium text-primary-700 bg-gray-800 text-white border-b-2 border-gray-700 py-2 shadow-lg hover:shadow-xl transition-shadow duration-300';
 
 type ColumnType = keyof typeof COLUMN_WIDTHS;
 

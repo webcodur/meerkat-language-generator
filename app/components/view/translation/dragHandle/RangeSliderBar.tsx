@@ -21,7 +21,7 @@ export const RangeSliderBar: React.FC<RangeSliderBarProps> = ({
 	const getRangeBarStyle = () => ({
 		height: `${rangeHeight}px`,
 		top: `${handlePosition - rangeHeight / 2 + HANDLE_VERTICAL_OFFSET}px`,
-		transition: isDragging ? 'none' : 'all 0.15s ease-out',
+		transition: isDragging ? 'none' : 'all 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
 		transform: isDragging ? `translateY(${dragOffset}px)` : 'none',
 		willChange: isDragging ? 'transform' : 'auto',
 	});
@@ -30,7 +30,7 @@ export const RangeSliderBar: React.FC<RangeSliderBarProps> = ({
 		<>
 			{/* 전체 레인지 슬라이더 바 */}
 			<div
-				className="absolute w-3 bg-gray-200 left-3 cursor-grab active:cursor-grabbing"
+				className="absolute w-2 bg-gray-100 rounded-full shadow-inner left-3 cursor-grab active:cursor-grabbing"
 				style={{
 					height: '100%',
 					top: '0px',
@@ -40,8 +40,8 @@ export const RangeSliderBar: React.FC<RangeSliderBarProps> = ({
 
 			{/* 선택된 영역 표시 바 */}
 			<div
-				className={`absolute left-3 w-3 bg-sky-500 cursor-grab active:cursor-grabbing ${
-					isDragging ? 'opacity-50' : ''
+				className={`absolute left-3 w-2 bg-gray-400 cursor-grab active:cursor-grabbing rounded-full shadow-lg ${
+					isDragging ? 'opacity-70' : ''
 				}`}
 				style={getRangeBarStyle()}
 				onMouseDown={onMouseDown}

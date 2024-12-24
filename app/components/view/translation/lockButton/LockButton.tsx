@@ -24,7 +24,7 @@ interface LockButtonProps {
  */
 export default function LockButton({ isLocked, onShowModal }: LockButtonProps) {
 	const buttonClass =
-		'fixed w-12 h-12 flex items-center justify-center text-white bg-primary-500 rounded-full hover:bg-primary-600 z-[120]';
+		'fixed w-12 h-12 flex items-center justify-center text-white bg-gray-700 rounded-full hover:bg-gray-600 z-[120]';
 
 	const handleLockClick = () => {
 		if (!isLocked) {
