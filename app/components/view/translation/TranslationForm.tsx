@@ -117,7 +117,6 @@ export default function TranslationForm() {
 	return (
 		<div className="flex w-full">
 			<div className="relative p-6 pb-32 border rounded-lg">
-				<ModelInfo model={'gpt-4o-mini'} />
 				<TableHeader />
 				<div className="relative">
 					{selectedRows.length > 0 && (
