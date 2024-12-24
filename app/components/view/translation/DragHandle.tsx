@@ -280,14 +280,6 @@ export default function DragHandle({
 		return () => window.removeEventListener('resize', calculateHeights);
 	}, [selectedRows, rows]);
 
-	useEffect(() => {
-		console.log('totalHeight', totalHeight);
-		console.log('rangeHeight', rangeHeight);
-		console.log('handlePosition', handlePosition);
-		console.log('rowPositions', rowPositions);
-		console.log('--------------------------------------------');
-	}, [totalHeight, rangeHeight, handlePosition, rowPositions]);
-
 	// ESC 키 감지를 위한 이벤트 리스너
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {

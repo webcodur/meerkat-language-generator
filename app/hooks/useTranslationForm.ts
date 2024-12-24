@@ -21,7 +21,7 @@ export default function useTranslationForm() {
 		},
 	]);
 
-	// 각 행별 로딩 상태를 관리하는 객체
+	// 각 행별 로딩 상태
 	const [loadingRows, setLoadingRows] = useState<{ [key: number]: boolean }>({});
 	// 전체 데이터 로딩 상태
 	const [isLoading, setIsLoading] = useState(true);
@@ -29,27 +29,24 @@ export default function useTranslationForm() {
 	const [error, setError] = useState<string | null>(null);
 	// 선택된 행들의 인덱스 배열
 	const [selectedRows, setSelectedRows] = useState<number[]>([]);
-	// 행 이동 미리보기 상태
+	// 행 이동 미리보기 상태: 출발지 인덱스 & 목적지 인덱스
 	const [previewMove, setPreviewMove] = useState<{
 		fromIndex: number;
 		toIndex: number | null;
 	} | null>(null);
 
-	// 선택된 행이 없을 때 previewMove 초기화를 위한 이펙트 추가
+	// 선택 행이 없을 때 previewMove 초기화
 	useEffect(() => {
 		if (selectedRows.length === 0) {
 			setPreviewMove(null);
 		}
 	}, [selectedRows]);
 
-	/**
-	 * 서버에서 번역 데이터를 로드하는 함수
-	 * 초기 로드 및 새로고침 시 사용됩니다.
-	 *
-	 *
-	 * 위쪽으로 드래그 시 드래그 핸들이 안 따라오고
-	 * 아래로 드래그 시 드래그 핸들이 따라오는데, 이유 분석
-	 */
+	// useEffect(() => {
+	// 	console.log('previewMove', previewMove?.fromIndex, previewMove?.toIndex);
+	// }, [previewMove]);
+
+	// 서버에서 번역 데이터 로드
 	const loadTranslationData = async () => {
 		setIsLoading(true);
 		setError(null);
@@ -79,10 +76,7 @@ export default function useTranslationForm() {
 		}
 	};
 
-	/**
-	 * 특정 행의 번역을 생성하는 함수
-	 * @param {number} index - 번역을 생성할 행의 인덱스
-	 */
+	// 행 번역
 	const handleSubmit = async (index: number) => {
 		const koreanWord = rows[index].koreanWord;
 		const koreanDescription = rows[index].koreanDescription;
@@ -111,10 +105,7 @@ export default function useTranslationForm() {
 		}
 	};
 
-	/**
-	 * 새로운 빈 행을 추가하는 함수
-	 * 행이 선택되어 있지 않을 때만 동작합니다.
-	 */
+	// 행 추가 * 행이 선택되어 있지 않을 때만 동작
 	const handleDuplicate = () => {
 		if (selectedRows.length > 0) return;
 
@@ -129,11 +120,7 @@ export default function useTranslationForm() {
 		setRows([...rows, emptyRow]);
 	};
 
-	/**
-	 * 특정 행을 삭제하는 함수
-	 * 검수된 행은 삭제할 수 없으며, 최소 1개의 행은 유지됩니다.
-	 * @param {number} index - 삭제할 행의 인덱스
-	 */
+	// 행 삭제 * 검수된 행은 삭제할 수 없으며, 최소 1개 행은 유지
 	const handleDelete = (index: number) => {
 		if (selectedRows.length > 0) return;
 
@@ -147,11 +134,9 @@ export default function useTranslationForm() {
 		}
 	};
 
-	/**
-	 * 행들을 이동하는 함수
-	 * 드래그 핸들러가 도착했을 때 선택된 행들의 체크를 모두 해제하고 드래그 핸들러를 초기화하는 기능을 구현합니다.
-	 */
+	// 블록 이동: 드래그 핸들러 도착 시 블록 체크를 모두 해제 & 드래그 핸들러 초기화
 	const handleMoveRows = () => {
+		// 미리보기 상태가 없거나 목적지가 없으면 종료
 		if (!previewMove || previewMove.toIndex === null) return;
 
 		// 선택된 행들을 새 위치로 이동

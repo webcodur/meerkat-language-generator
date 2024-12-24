@@ -14,15 +14,15 @@ import useTranslationForm from '@/app/hooks/useTranslationForm';
 import usePasswordLock from '@/app/hooks/usePasswordLock';
 
 export default function TranslationForm() {
-	// 커스텀 훅을 통한 상태 및 기능 관리
+	/* 번역 관련  */
 	const {
 		rows, // 번역 행 데이터
-		setRows, // 행 데이터 업데이트 함수
+		setRows,
 		selectedRows, // 선택된 행 인덱스 배열
-		setSelectedRows, // 선택된 행 업데이트 함수
-		loadingRows, // 로딩 중인 행 표시
+		setSelectedRows,
 		previewMove, // 이동 미리보기 상태
-		setPreviewMove, // 미리보기 상태 업데이트
+		setPreviewMove,
+		loadingRows, // 로딩 중인 행 표시
 		isLoading, // 전체 로딩 상태
 		error, // 에러 상태
 		loadTranslationData, // 번역 데이터 로드 함수
@@ -32,7 +32,7 @@ export default function TranslationForm() {
 		getRowStyle, // 행 스타일 계산 함수
 	} = useTranslationForm();
 
-	// 비밀번호 잠금 관련 상태 및 기능
+	/* 비밀번호 잠금 관련 */
 	const {
 		showModal, // 모달 표시 여부
 		setShowModal, // 모달 표시 상태 업데이트
