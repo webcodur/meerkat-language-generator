@@ -29,17 +29,12 @@ const GIST_ID = process.env.GIST_ID;
  * @param input 번역할 한국어 텍스트와 설명
  * @returns 생성된 영어 키, 영어 번역, 아랍어 번역
  */
-export async function generateTranslations(
-	input: TranslationInput
-): Promise<TranslationResponse> {
-	const response = await fetch(
-		`${process.env.NEXT_PUBLIC_API_URL}/api/translate`,
-		{
-			method: 'POST',
-			headers: { 'Content-Type': 'application/json' },
-			body: JSON.stringify(input),
-		}
-	);
+export async function generateTranslations(input: TranslationInput): Promise<TranslationResponse> {
+	const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/translate`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(input),
+	});
 
 	if (!response.ok) throw new Error('번역 요청 실패');
 	const result = await response.json();
@@ -67,6 +62,10 @@ export async function loadTranslations(): Promise<TranslationData> {
 			gist_id: GIST_ID!,
 		});
 
+		if (!response.data.files) {
+			throw new Error('Gist 파일을 찾을 수 없습니다.');
+		}
+
 		const files = response.data.files;
 
 		// 각 언어별 JSON 파일 파싱
@@ -74,9 +73,7 @@ export async function loadTranslations(): Promise<TranslationData> {
 			ko: JSON.parse(files['ko.json']?.content || '{}'),
 			en: JSON.parse(files['en.json']?.content || '{}'),
 			ar: JSON.parse(files['ar.json']?.content || '{}'),
-			descriptions: JSON.parse(
-				files['description.json']?.content || '{}'
-			),
+			descriptions: JSON.parse(files['description.json']?.content || '{}'),
 			isVerified: JSON.parse(files['verification.json']?.content || '{}'),
 		};
 	} catch (error) {
