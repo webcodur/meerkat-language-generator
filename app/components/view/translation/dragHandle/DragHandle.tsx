@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { RangeSliderBar } from './RangeSliderBar';
+import { DragHandleButton } from './DragHandleButton';
+import { HANDLE_VERTICAL_OFFSET } from '@/app/data/constant/dragHandle';
 
-/**
- * DragHandle 컴포넌트의 Props 타입 정의
- */
 interface DragHandleProps {
 	selectedRows: number[]; // 현재 선택된 행들의 인덱스 배열
 	totalRows: number; // 테이블의 전체 행 개수
@@ -10,22 +10,6 @@ interface DragHandleProps {
 	onPreviewMove?: (fromIndex: number, toIndex: number | null) => void; // 이동 미리보기 표현 시 실행함수
 	rows: any[]; // 테이블의 전체 데이터 배열
 }
-
-/**
- * 시각적 구조:
- * ┌────────────────┐
- * │  일반 행      │ ← offsetTop
- * ├────────────────┤
- * │  선택된 행 1  │ ← minTop
- * ├────────────────┤     ↕ rangeHeight
- * │  선택된 행 2  │ ← handlePosition
- * ├────────────────┤
- * │  선택된 행 3  │ ← maxBottom
- * ├────────────────┤
- * │  일반 행      │
- * └────────────────┘
- *   ↔ height
- */
 
 export default function DragHandle({
 	selectedRows,
@@ -40,10 +24,10 @@ export default function DragHandle({
 	const [dragOffset, setDragOffset] = useState(0); // 드래그 오프셋 상태 추가
 
 	// 크기 및 위치 상태 관리
-	const [totalHeight, setTotalHeight] = useState(0);
-	const [rangeHeight, setRangeHeight] = useState(0);
-	const [handlePosition, setHandlePosition] = useState(0);
-	const [rowPositions, setRowPositions] = useState<number[]>([]);
+	const [totalHeight, setTotalHeight] = useState(0); // 전체 테이블의 높이
+	const [rangeHeight, setRangeHeight] = useState(0); // 선택된 행들의 전체 높이
+	const [handlePosition, setHandlePosition] = useState(0); // 드래그 핸들의 수직 위치
+	const [rowPositions, setRowPositions] = useState<number[]>([]); // 각 행의 상대적 위치를 저장하는 배열
 
 	// DOM 요소 참조
 	const handleRef = useRef<HTMLDivElement>(null);
@@ -74,7 +58,7 @@ export default function DragHandle({
 
 		// 4. 계산된 값들로 상태 업데이트
 		rangeH = maxBottom - minTop; // 선택된 행들의 전체 높이
-		const handlePos = minTop + rangeH / 2 - 14; // 핸들 위치 (중앙에 배치)
+		const handlePos = minTop + rangeH / 2 - HANDLE_VERTICAL_OFFSET; // 핸들 위치 (중앙에 배치)
 
 		setTotalHeight(totalH); // 전체 테이블 높이
 		setRangeHeight(rangeH); // 선택된 영역의 높이
@@ -82,20 +66,6 @@ export default function DragHandle({
 		setRowPositions(positions); // 각 행의 위치 배열
 	};
 
-	/**
-	 * 현재 마우스 위치에 해당하는 대상 행의 인덱스를 계산
-	 *
-	 * 시각적 구조:
-	 * ┌────────────────┐ ← sliderRect.top
-	 * │     행 1      │
-	 * ├────────────────┤
-	 * │     행 2      │ ← mouseY
-	 * ├────────────────┤     ↕ relativeY
-	 * │     행 3      │ ← rowMiddle
-	 * ├────────────────┤
-	 * │     행 4      │
-	 * └────────────────┘
-	 */
 	const getTargetIndex = (mouseY: number): number | null => {
 		const sliderRect = sliderRef.current?.getBoundingClientRect();
 		if (!sliderRect) return null;
@@ -129,7 +99,7 @@ export default function DragHandle({
 			if (relativeY >= current.top && relativeY <= current.bottom) {
 				const middlePoint = (current.top + current.bottom) / 2;
 				// 행의 위쪽 절반에 있으면 현재 행, 아래쪽 절반에 있으면 다음 행의 인덱스
-				return relativeY < middlePoint ? current.index : (next?.index ?? current.index);
+				return relativeY < middlePoint ? current.index : next?.index ?? current.index;
 			}
 		}
 
@@ -328,67 +298,27 @@ export default function DragHandle({
 	// 선택된 행이 없으면 렌더링하지 않음
 	if (selectedRows.length === 0) return null;
 
-	// 선택된 영역 표시 바 스타일 계산 최적화
-	const getRangeBarStyle = useCallback(() => {
-		const baseStyle = {
-			height: `${rangeHeight}px`,
-			top: `${handlePosition - rangeHeight / 2 + 14}px`,
-			transition: isDragging ? 'none' : 'all 0.15s ease-out',
-			transform: isDragging ? `translateY(${dragOffset}px)` : 'none',
-			willChange: isDragging ? 'transform' : 'auto',
-		};
-
-		return baseStyle;
-	}, [rangeHeight, handlePosition, isDragging, dragOffset]);
-
-	// 드래그 핸들 스타일 계산 최적화
-	const getHandleStyle = useCallback(() => {
-		const baseStyle = {
-			top: `${handlePosition}px`,
-			transition: isDragging ? 'none' : 'all 0.15s ease-out',
-			transform: isDragging ? `translateY(${dragOffset}px)` : 'none',
-			willChange: isDragging ? 'transform' : 'auto',
-		};
-
-		return baseStyle;
-	}, [handlePosition, isDragging, dragOffset]);
-
 	return (
 		<div
 			ref={sliderRef}
 			className="absolute h-full -left-8"
 			style={{ height: `${totalHeight}px` }}
 		>
-			{/* 전체 레인지 슬라이더 바 */}
-			<div
-				className="absolute w-3 bg-gray-200 left-3 cursor-grab active:cursor-grabbing"
-				style={{
-					height: '100%',
-					top: '0px',
-				}}
+			<RangeSliderBar
+				totalHeight={totalHeight}
+				rangeHeight={rangeHeight}
+				handlePosition={handlePosition}
+				isDragging={isDragging}
+				dragOffset={dragOffset}
 				onMouseDown={handleMouseDown}
 			/>
 
-			{/* 선택된 영역 표시 바 */}
-			<div
-				className={`absolute left-3 w-3 bg-blue-500 cursor-grab active:cursor-grabbing ${isDragging ? 'opacity-50' : ''}`}
-				style={getRangeBarStyle()}
+			<DragHandleButton
+				handlePosition={handlePosition}
+				isDragging={isDragging}
+				dragOffset={dragOffset}
 				onMouseDown={handleMouseDown}
 			/>
-
-			{/* 드래그 핸들 버튼 */}
-			<div
-				ref={handleRef}
-				className={`absolute left-1 flex items-center justify-center w-7 h-7 bg-blue-600 rounded-full shadow-md hover:bg-blue-700 cursor-grab active:cursor-grabbing ${isDragging ? 'z-50' : 'z-10'}`}
-				style={getHandleStyle()}
-				onMouseDown={handleMouseDown}
-			>
-				<div className="flex flex-col items-center justify-center gap-1">
-					<div className="w-4 h-0.5 bg-white rounded"></div>
-					<div className="w-4 h-0.5 bg-white rounded"></div>
-					<div className="w-4 h-0.5 bg-white rounded"></div>
-				</div>
-			</div>
 		</div>
 	);
 }

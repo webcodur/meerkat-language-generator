@@ -56,21 +56,19 @@ export default function PasswordModal({
 				/>
 				{/* 비밀번호 오류 메시지 */}
 				{passwordError && (
-					<p className="mb-4 text-sm text-red-500">
-						잘못된 비밀번호입니다
-					</p>
+					<p className="mb-4 text-sm text-primary-500">잘못된 비밀번호입니다</p>
 				)}
 				{/* 버튼 그룹 */}
 				<div className="flex justify-end space-x-2">
 					<button
 						onClick={onClose}
-						className="px-4 py-2 text-gray-600 bg-gray-200 rounded hover:bg-gray-300"
+						className="px-4 py-2 text-primary-700 bg-primary-50 rounded hover:bg-primary-100"
 					>
 						취소
 					</button>
 					<button
 						onClick={onSubmit}
-						className="px-4 py-2 text-white bg-blue-500 rounded hover:bg-blue-600"
+						className="px-4 py-2 text-white bg-primary-500 rounded hover:bg-primary-600"
 					>
 						확인
 					</button>

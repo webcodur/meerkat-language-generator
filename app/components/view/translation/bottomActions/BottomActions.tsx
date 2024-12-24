@@ -1,7 +1,7 @@
-// 번역 데이터 저장을 위한 액션 import
-import { saveTranslations } from '@/app/actions/translationActions';
-// 번역 타입 정의 import
-import { Translation } from '@/app/types/translate';
+import { Translation } from '@/app/types/translate'; // 번역 타입
+import { saveTranslations } from '@/app/actions/translationActions'; // 번역 데이터 저장을 위한 액션
+import JsonDownLoader from './jsonDownLoader/JsonDownLoader';
+import { FaPlus, FaDatabase, FaUndo } from 'react-icons/fa';
 
 // 컴포넌트 props 인터페이스 정의
 interface BottomActionsProps {
@@ -19,6 +19,9 @@ export default function BottomActions({
 	rows,
 	onClearSelection,
 }: BottomActionsProps) {
+	const buttonClass =
+		'px-6 py-2 text-white rounded flex items-center justify-center gap-2 text-sm font-medium transition-colors duration-200';
+
 	// 번역 데이터 저장 핸들러
 	const handleSave = async () => {
 		// 빈 영문 키값 체크
@@ -29,11 +32,11 @@ export default function BottomActions({
 		}
 
 		// 각 언어별 데이터 객체 생성
-		const arTranslations: Record<string, string> = {}; // 아랍어 번역
-		const koTranslations: Record<string, string> = {}; // 한국어 번역
-		const enTranslations: Record<string, string> = {}; // 영어 번역
-		const verifiedStates: Record<string, boolean> = {}; // 검증 상태
-		const descriptions: Record<string, string> = {}; // 한국어 설명
+		const arTranslations: Record<string, string> = {};
+		const koTranslations: Record<string, string> = {};
+		const enTranslations: Record<string, string> = {};
+		const verifiedStates: Record<string, boolean> = {};
+		const descriptions: Record<string, string> = {};
 
 		// 각 행의 데이터를 언어별 객체에 매핑
 		rows.forEach((row) => {
@@ -63,105 +66,49 @@ export default function BottomActions({
 		}
 	};
 
-	// JSON 파일 다운로드 핸들러
-	const handleDownload = (type: 'ko' | 'en' | 'ar') => {
-		const translations: Record<string, string> = {};
-
-		// 선택된 언어의 번역 데이터만 추출
-		rows.forEach((row) => {
-			if (row.englishKey) {
-				switch (type) {
-					case 'ko':
-						translations[row.englishKey] = row.koreanWord;
-						break;
-					case 'en':
-						translations[row.englishKey] = row.englishTranslation;
-						break;
-					case 'ar':
-						translations[row.englishKey] = row.arabicTranslation;
-						break;
-				}
-			}
-		});
-
-		// JSON 파일 생성 및 다운로드
-		const blob = new Blob([JSON.stringify(translations, null, 2)], {
-			type: 'application/json',
-		});
-		const url = URL.createObjectURL(blob);
-		const a = document.createElement('a');
-		a.href = url;
-		a.download = `${type}.json`;
-		document.body.appendChild(a);
-		a.click();
-		document.body.removeChild(a);
-		URL.revokeObjectURL(url);
-	};
-
 	// 하단 고정 액션 버튼 UI 렌더링
 	return (
 		<div className="fixed bottom-0 left-0 right-0 py-4 bg-white border-t z-[100]">
 			<div className="px-6 mx-auto max-w-7xl">
 				<div className="flex flex-col space-y-4">
 					<div className="flex justify-center space-x-4">
-						{/* 선택 해제 버튼 */}
 						<button
 							type="button"
 							onClick={onClearSelection}
 							disabled={!disableActions}
-							className={`px-6 py-2 text-white rounded
+							className={`${buttonClass}
 								${!disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-yellow-500 hover:bg-yellow-600'}`}
 						>
+							<FaUndo className="w-4 h-4" />
 							선택해제
 						</button>
-						{/* 행 추가 버튼 */}
+
 						<button
 							type="button"
 							onClick={onDuplicate}
 							disabled={disableActions}
-							className={`px-6 py-2 text-white rounded
+							className={`${buttonClass}
 								${disableActions ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-500 hover:bg-green-600'}`}
 						>
-							+ 행 추가
+							<FaPlus className="w-4 h-4" />행 추가
 						</button>
-						{/* DB 저장 버튼 */}
+
 						<button
 							type="button"
 							onClick={handleSave}
 							disabled={isLocked}
-							className={`px-6 py-2 text-white rounded ${
+							className={`${buttonClass} ${
 								isLocked
 									? 'bg-gray-400 cursor-not-allowed'
 									: 'bg-blue-500 hover:bg-blue-600'
 							}`}
 						>
-							DB저장 (gist)
+							<FaDatabase className="w-4 h-4" />
+							DB저장
 						</button>
 					</div>
-					<div className="flex justify-center space-x-4">
-						{/* 각 언어별 JSON 다운로드 버튼 */}
-						<button
-							type="button"
-							onClick={() => handleDownload('ko')}
-							className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
-						>
-							ko.json
-						</button>
-						<button
-							type="button"
-							onClick={() => handleDownload('en')}
-							className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
-						>
-							en.json
-						</button>
-						<button
-							type="button"
-							onClick={() => handleDownload('ar')}
-							className="px-6 py-2 text-white bg-purple-500 rounded hover:bg-purple-600"
-						>
-							ar.json
-						</button>
-					</div>
+
+					<JsonDownLoader rows={rows} />
 				</div>
 			</div>
 		</div>

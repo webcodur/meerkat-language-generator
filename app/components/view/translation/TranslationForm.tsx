@@ -1,47 +1,70 @@
 'use client';
 import { Translation } from '@/app/types/translate';
+import { PreviewMoveType } from '@/app/types/translate';
 
-import ModelInfo from './ModelInfo';
-import LockButton from './LockButton';
-import PasswordModal from './PasswordModal';
-import TableHeader from './TableHeader';
-import BottomActions from './BottomActions';
-import TranslationRow from './TranslationRow';
-import DragHandle from './DragHandle';
+import ModelInfo from './modelInfo/ModelInfo';
+import LockButton from './lockButton/LockButton';
+import PasswordModal from './passwordModal/PasswordModal';
+import TableHeader from './tableHeader/TableHeader';
+import BottomActions from './bottomActions/BottomActions';
+import TranslationRow from './translationRow/TranslationRow';
+import DragHandle from './dragHandle/DragHandle';
 import LoadingState from '@/app/components/ui/LoadingState';
 import ErrorState from '@/app/components/ui/ErrorState';
-import useTranslationForm from '@/app/hooks/useTranslationForm';
+import useTranslations from '@/app/hooks/useTranslations';
+import useRowSelection from '@/app/hooks/useRowSelection';
 import usePasswordLock from '@/app/hooks/usePasswordLock';
 
-export default function TranslationForm() {
-	/* 번역 관련  */
-	const {
-		rows, // 번역 행 데이터
-		setRows,
-		selectedRows, // 선택된 행 인덱스 배열
-		setSelectedRows,
-		previewMove, // 이동 미리보기 상태
-		setPreviewMove,
-		loadingRows, // 로딩 중인 행 표시
-		isLoading, // 전체 로딩 상태
-		error, // 에러 상태
-		loadTranslationData, // 번역 데이터 로드 함수
-		handleSubmit, // 제출 핸들러
-		handleDuplicate, // 복제 핸들러
-		handleDelete, // 삭제 핸들러
-		getRowStyle, // 행 스타일 계산 함수
-	} = useTranslationForm();
+const getRowStyle = (
+	index: number,
+	selectedRows: number[],
+	previewMove: PreviewMoveType | null
+) => {
+	const isSelected = selectedRows.includes(index);
+	const style: React.CSSProperties = {};
 
-	/* 비밀번호 잠금 관련 */
+	if (isSelected) {
+		style.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+	}
+
+	if (previewMove) {
+		if (selectedRows.includes(index)) {
+			style.opacity = '0.5';
+		}
+
+		if (previewMove.toIndex === index) {
+			style.borderTop = '2px solid #3b82f6';
+		}
+	}
+
+	return style;
+};
+
+export default function TranslationForm() {
 	const {
-		showModal, // 모달 표시 여부
-		setShowModal, // 모달 표시 상태 업데이트
-		isLocked, // 잠금 상태
-		password, // 비밀번호
-		passwordError, // 비밀번호 에러
-		handlePasswordSubmit, // 비밀번호 제출 핸들러
-		handlePasswordChange, // 비밀번호 변경 핸들러
-		handleModalClose, // 모달 닫기 핸들러
+		rows,
+		setRows,
+		loadingRows,
+		isLoading,
+		error,
+		loadTranslationData,
+		handleSubmit,
+		handleDuplicate,
+		handleDelete,
+	} = useTranslations();
+
+	const { selectedRows, setSelectedRows, previewMove, setPreviewMove, handleMoveRows } =
+		useRowSelection(rows, setRows);
+
+	const {
+		showModal,
+		setShowModal,
+		isLocked,
+		password,
+		passwordError,
+		handlePasswordSubmit,
+		handlePasswordChange,
+		handleModalClose,
 	} = usePasswordLock();
 
 	// 행 업데이트 핸들러
@@ -81,47 +104,6 @@ export default function TranslationForm() {
 		});
 	};
 
-	// 행 이동 핸들러
-	const handleMoveRows = () => {
-		if (!previewMove || previewMove.toIndex === null) return;
-
-		// 현재 선택된 행들의 인덱스 범위 확인
-		const minSelectedIndex = Math.min(...selectedRows);
-		const maxSelectedIndex = Math.max(...selectedRows);
-		const targetIndex = previewMove.toIndex;
-
-		// 이동이 필요없는 경우 (이미 맨 위에 있고 위로 이동하려 할 때)
-		if (minSelectedIndex === 0 && targetIndex === 0) {
-			setPreviewMove(null);
-			return;
-		}
-
-		// 이동이 필요없는 경우 (이미 맨 아래에 있고 아래로 이동하려 할 때)
-		if (maxSelectedIndex === rows.length - 1 && targetIndex === rows.length - 1) {
-			setPreviewMove(null);
-			return;
-		}
-
-		// 선택된 행들을 새 위치로 이동
-		const newRows = [...rows];
-		const selectedRowsData = selectedRows.map((index) => newRows[index]);
-		const remainingRows = newRows.filter((_, index) => !selectedRows.includes(index));
-
-		// 새로운 위치에 선택된 행들 삽입
-		remainingRows.splice(targetIndex, 0, ...selectedRowsData);
-
-		// 선택된 행들의 새 인덱스 계산
-		const newSelectedRows = Array.from(
-			{ length: selectedRows.length },
-			(_, i) => targetIndex + i
-		);
-
-		// 상태 업데이트
-		setRows(remainingRows);
-		setSelectedRows(newSelectedRows);
-		setPreviewMove(null);
-	};
-
 	// 이동 미리보기 핸들러
 	const handlePreviewMove = (fromIndex: number, toIndex: number | null) => {
 		setPreviewMove(toIndex === null ? null : { fromIndex, toIndex });
@@ -149,7 +131,7 @@ export default function TranslationForm() {
 					)}
 
 					{rows.map((row, index) => (
-						<div key={index} style={getRowStyle(index)}>
+						<div key={index} style={getRowStyle(index, selectedRows, previewMove)}>
 							<TranslationRow
 								row={row}
 								index={index}
