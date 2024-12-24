@@ -151,6 +151,7 @@ export default function DragHandle({
 
 				const minSelectedIndex = Math.min(...selectedRows);
 				const maxSelectedIndex = Math.max(...selectedRows);
+				const rowBoundaries = getRowBoundaries(measurements.rowPositions);
 				const targetRow = document.querySelector(
 					`[data-row-id="${targetIndex}"]`
 				) as HTMLElement;
@@ -161,12 +162,37 @@ export default function DragHandle({
 					} else {
 						targetRow.classList.add('preview-move');
 					}
-					onPreviewMove?.(minSelectedIndex, targetIndex);
-					setDragState((prev) => ({ ...prev, dragOffset: diff }));
 				}
+
+				if (targetIndex === rowBoundaries.length) {
+					const lastRow = document.querySelector(
+						`[data-row-id="${rowBoundaries.length - 1}"]`
+					) as HTMLElement;
+					if (lastRow) {
+						const previewLine = document.createElement('div');
+						previewLine.className = 'preview-move';
+						previewLine.style.position = 'absolute';
+						previewLine.style.top = `${lastRow.offsetTop + lastRow.offsetHeight}px`;
+						previewLine.style.width = '100%';
+						previewLine.style.height = '2px';
+						previewLine.style.backgroundColor = 'blue';
+						lastRow.parentElement?.appendChild(previewLine);
+					}
+				}
+
+				onPreviewMove?.(minSelectedIndex, targetIndex);
+				setDragState((prev) => ({ ...prev, dragOffset: diff }));
 			}
 		},
-		[dragState.isDragging, dragState.startY, selectedRows, onPreviewMove, getTargetIndex]
+		[
+			dragState.isDragging,
+			dragState.startY,
+			selectedRows,
+			onPreviewMove,
+			getTargetIndex,
+			measurements.rowPositions,
+			getRowBoundaries,
+		]
 	);
 
 	const handleMouseUp = useCallback(() => {
