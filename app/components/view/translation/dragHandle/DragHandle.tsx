@@ -4,118 +4,119 @@ import { DragHandleButton } from './DragHandleButton';
 import { HANDLE_VERTICAL_OFFSET } from '@/app/data/constant/dragHandle';
 
 interface DragHandleProps {
-	selectedRows: number[]; // 현재 선택된 행들의 인덱스 배열
-	totalRows: number; // 테이블의 전체 행 개수
-	onMoveRows?: () => void; // 행 이동이 완료된 후 실행될 콜백 함수
-	onPreviewMove?: (fromIndex: number, toIndex: number | null) => void; // 이동 미리보기 표현 시 실행함수
-	rows: any[]; // 테이블의 전체 데이터 배열
+	selectedRows: number[];
+	onMoveRows?: () => void;
+	onPreviewMove?: (fromIndex: number, toIndex: number | null) => void;
+	rows: any[];
+}
+
+interface DragState {
+	isDragging: boolean;
+	startY: number;
+	dragOffset: number;
+}
+
+interface Measurements {
+	totalHeight: number;
+	rangeHeight: number;
+	handlePosition: number;
+	rowPositions: number[];
+}
+
+interface RowBoundary {
+	top: number;
+	bottom: number;
+	index: number;
+	height: number;
 }
 
 export default function DragHandle({
 	selectedRows,
-	totalRows,
 	onMoveRows,
 	onPreviewMove,
 	rows,
 }: DragHandleProps) {
-	// 드래그 상태 관리
-	const [isDragging, setIsDragging] = useState(false);
-	const [startY, setStartY] = useState(0);
-	const [dragOffset, setDragOffset] = useState(0); // 드래그 오프셋 상태 추가
+	const [dragState, setDragState] = useState<DragState>({
+		isDragging: false,
+		startY: 0,
+		dragOffset: 0,
+	});
 
-	// 크기 및 위치 상태 관리
-	const [totalHeight, setTotalHeight] = useState(0); // 전체 테이블의 높이
-	const [rangeHeight, setRangeHeight] = useState(0); // 선택된 행들의 전체 높이
-	const [handlePosition, setHandlePosition] = useState(0); // 드래그 핸들의 수직 위치
-	const [rowPositions, setRowPositions] = useState<number[]>([]); // 각 행의 상대적 위치를 저장하는 배열
+	const [measurements, setMeasurements] = useState<Measurements>({
+		totalHeight: 0,
+		rangeHeight: 0,
+		handlePosition: 0,
+		rowPositions: [],
+	});
 
-	// DOM 요소 참조
-	const handleRef = useRef<HTMLDivElement>(null);
 	const sliderRef = useRef<HTMLDivElement>(null);
 
-	// 테이블의 모든 행들의 높이와 위치를 계산하는 함수
-	const calculateHeights = () => {
-		// 1. 모든 테이블 행 요소 선택
+	const calculateHeights = useCallback(() => {
 		const rows = document.querySelectorAll('[data-row-id]');
 		let totalH = 0;
-		let rangeH = 0;
-		let minTop = Infinity; // 선택된 행들 중 가장 위에 있는 행의 위치
-		let maxBottom = 0; // 선택된 행들 중 가장 아래 있는 행의 아래쪽 끝 위치
-		const positions: number[] = []; // 각 행의 상대적 위치 저장
+		let minTop = Infinity;
+		let maxBottom = 0;
+		const positions: number[] = [];
 
-		// 각 행의 높이와 위치 계산
 		rows.forEach((row, index) => {
-			const rect = row.getBoundingClientRect(); // 요소의 크기와 뷰포트 상대 위치 정보를 가져옴
-			positions[index] = (row as HTMLElement).offsetTop; // 행의 상대적 위치 (스크롤 위치와 무관)
+			const rect = row.getBoundingClientRect();
+			positions[index] = (row as HTMLElement).offsetTop;
 			totalH += rect.height;
 
-			// 선택된 행들의 범위 계산
 			if (selectedRows.includes(index)) {
 				minTop = Math.min(minTop, (row as HTMLElement).offsetTop);
 				maxBottom = Math.max(maxBottom, (row as HTMLElement).offsetTop + rect.height);
 			}
 		});
 
-		// 4. 계산된 값들로 상태 업데이트
-		rangeH = maxBottom - minTop; // 선택된 행들의 전체 높이
-		const handlePos = minTop + rangeH / 2 - HANDLE_VERTICAL_OFFSET; // 핸들 위치 (중앙에 배치)
+		const rangeH = maxBottom - minTop;
+		const handlePos = minTop + rangeH / 2 - HANDLE_VERTICAL_OFFSET;
 
-		setTotalHeight(totalH); // 전체 테이블 높이
-		setRangeHeight(rangeH); // 선택된 영역의 높이
-		setHandlePosition(handlePos); // 드래그 핸들의 위치
-		setRowPositions(positions); // 각 행의 위치 배열
-	};
+		setMeasurements({
+			totalHeight: totalH,
+			rangeHeight: rangeH,
+			handlePosition: handlePos,
+			rowPositions: positions,
+		});
+	}, [selectedRows]);
 
-	const getTargetIndex = (mouseY: number): number | null => {
-		const sliderRect = sliderRef.current?.getBoundingClientRect();
-		if (!sliderRect) return null;
-
-		const relativeY = mouseY - sliderRect.top;
-
-		// 각 행의 경계 위치 계산
-		const rowBoundaries = rowPositions.map((position, index) => {
+	const getRowBoundaries = useCallback((rowPositions: number[]): RowBoundary[] => {
+		return rowPositions.map((position, index) => {
 			const row = document.querySelector(`[data-row-id="${index}"]`);
-			if (!row) return { top: position, bottom: position, index };
+			if (!row) return { top: position, bottom: position, index, height: 0 };
 
 			const rect = row.getBoundingClientRect();
 			return {
 				top: position,
 				bottom: position + rect.height,
 				index,
+				height: rect.height,
 			};
 		});
+	}, []);
 
-		// 선택되지 않은 행들만 고려
-		const unselectedBoundaries = rowBoundaries.filter(
-			(_, index) => !selectedRows.includes(index)
-		);
+	const getTargetIndex = useCallback(
+		(mouseY: number): number | null => {
+			const sliderRect = sliderRef.current?.getBoundingClientRect();
+			if (!sliderRect) return null;
 
-		// 마우스가 위치한 행 찾기
-		for (let i = 0; i < unselectedBoundaries.length; i++) {
-			const current = unselectedBoundaries[i];
-			const next = unselectedBoundaries[i + 1];
+			const relativeY = mouseY - sliderRect.top;
+			const rowBoundaries = getRowBoundaries(measurements.rowPositions);
 
-			// 현재 행의 영역 내에 있는 경우
-			if (relativeY >= current.top && relativeY <= current.bottom) {
-				const middlePoint = (current.top + current.bottom) / 2;
-				// 행의 위쪽 절반에 있으면 현재 행, 아래쪽 절반에 있으면 다음 행의 인덱스
-				return relativeY < middlePoint ? current.index : next?.index ?? current.index;
+			for (let i = 0; i < rowBoundaries.length; i++) {
+				const current = rowBoundaries[i];
+				const rowMiddle = current.top + current.height / 2;
+
+				if (relativeY <= rowMiddle) {
+					return i;
+				}
 			}
-		}
 
-		// 경계값 처리
-		if (relativeY <= unselectedBoundaries[0].top) return unselectedBoundaries[0].index;
-		if (relativeY >= unselectedBoundaries[unselectedBoundaries.length - 1].bottom) {
-			// 마지막 행의 실제 인덱스 반환
-			return rowBoundaries[rowBoundaries.length - 1].index;
-		}
+			return rowBoundaries.length;
+		},
+		[measurements.rowPositions, getRowBoundaries]
+	);
 
-		return null;
-	};
-
-	/**
-	 * 마우스 드래그 동작의 시각적 구조:
-	 */
 	const handleMouseDown = (e: React.MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -125,198 +126,127 @@ export default function DragHandle({
 		const sliderRect = sliderRef.current.getBoundingClientRect();
 		const mouseY = e.clientY - sliderRect.top;
 
-		// 상태 업데이트를 한 번에 처리
-		Promise.resolve().then(() => {
-			setIsDragging(true);
-			setStartY(mouseY);
-			setDragOffset(0);
+		setDragState({
+			isDragging: true,
+			startY: mouseY,
+			dragOffset: 0,
 		});
-
-		// 이벤트 리스너 등록 전에 기존 리스너 제거
-		document.removeEventListener('mousemove', handleMouseMove);
-		document.removeEventListener('mouseup', handleMouseUp);
-
-		document.addEventListener('mousemove', handleMouseMove);
-		document.addEventListener('mouseup', handleMouseUp);
 	};
 
 	const handleMouseMove = useCallback(
 		(e: MouseEvent) => {
-			if (!isDragging || !sliderRef.current) return;
+			if (!dragState.isDragging || !sliderRef.current) return;
 
 			const sliderRect = sliderRef.current.getBoundingClientRect();
 			const mouseY = e.clientY - sliderRect.top;
-			const diff = mouseY - startY;
+			const diff = mouseY - dragState.startY;
 
-			// 성능 최적화: requestAnimationFrame 사용
-			requestAnimationFrame(() => {
-				const targetIndex = getTargetIndex(e.clientY);
-				if (targetIndex !== null) {
-					const minSelectedIndex = Math.min(...selectedRows);
-					const maxSelectedIndex = Math.max(...selectedRows);
-					const selectedRowsCount = selectedRows.length;
+			const targetIndex = getTargetIndex(e.clientY);
+			if (targetIndex !== null) {
+				document.querySelectorAll('.preview-move, .preview-move-invalid').forEach((el) => {
+					el.classList.remove('preview-move', 'preview-move-invalid');
+				});
 
-					// 맨 위에 있는 블록들을 위로 드래그할 때 처리
-					if (minSelectedIndex === 0) {
-						const isMovingUp = diff < 0;
-						if (isMovingUp) {
-							setDragOffset(0);
-							onPreviewMove?.(minSelectedIndex, 0);
-							return;
-						}
-					}
+				const minSelectedIndex = Math.min(...selectedRows);
+				const maxSelectedIndex = Math.max(...selectedRows);
+				const targetRow = document.querySelector(
+					`[data-row-id="${targetIndex}"]`
+				) as HTMLElement;
 
-					// 선택된 행들의 실제 높이 계산 최적화
-					const selectedRowsHeight = selectedRows.reduce((total, index) => {
-						const row = document.querySelector(`[data-row-id="${index}"]`);
-						if (!row) return total;
-						return total + row.getBoundingClientRect().height;
-					}, 0);
-
-					// 이동 가능 범위 계산
-					const firstRowTop = rowPositions[0];
-					const lastRowElement = document.querySelector(
-						`[data-row-id="${rows.length - 1}"]`
-					);
-					const lastRowRect = lastRowElement?.getBoundingClientRect();
-					const lastRowBottom = lastRowRect
-						? rowPositions[rowPositions.length - 1] + lastRowRect.height
-						: rowPositions[rowPositions.length - 1];
-
-					// 이동 제한 범위 계산
-					const currentTop = rowPositions[minSelectedIndex];
-					const maxOffset = lastRowBottom - selectedRowsHeight - currentTop;
-					const minOffset = -currentTop;
-
-					// 실제 적용할 오프셋 계산
-					const limitedOffset = Math.max(minOffset, Math.min(maxOffset, diff));
-
-					// 맨 위나 맨 아래로 이동할 때 특별 처리
-					let effectiveTargetIndex = targetIndex;
-					if (targetIndex === 0 && minSelectedIndex === 0) {
-						effectiveTargetIndex = 0;
-					} else if (targetIndex >= rows.length - selectedRowsCount) {
-						effectiveTargetIndex = rows.length - selectedRowsCount;
-					}
-
-					onPreviewMove?.(minSelectedIndex, effectiveTargetIndex);
-
-					// DOM 조작 최적화
-					const targetRow = document.querySelector(
-						`[data-row-id="${effectiveTargetIndex}"]`
-					) as HTMLElement;
-
-					if (targetRow) {
-						document.querySelectorAll('.preview-move').forEach((el) => {
-							el.classList.remove('preview-move');
-						});
+				if (targetRow) {
+					if (targetIndex >= minSelectedIndex && targetIndex <= maxSelectedIndex + 1) {
+						targetRow.classList.add('preview-move', 'preview-move-invalid');
+					} else {
 						targetRow.classList.add('preview-move');
-
-						setDragOffset(limitedOffset);
 					}
+					onPreviewMove?.(minSelectedIndex, targetIndex);
+					setDragState((prev) => ({ ...prev, dragOffset: diff }));
 				}
-			});
+			}
 		},
-		[isDragging, startY, selectedRows, onPreviewMove, getTargetIndex, rowPositions, rows.length]
+		[dragState.isDragging, dragState.startY, selectedRows, onPreviewMove, getTargetIndex]
 	);
 
-	const handleMouseUp = () => {
-		if (!isDragging) return;
+	const handleMouseUp = useCallback(() => {
+		if (!dragState.isDragging) return;
 
-		document.removeEventListener('mousemove', handleMouseMove);
-		document.removeEventListener('mouseup', handleMouseUp);
+		const previewElement = document.querySelector('.preview-move');
+		const targetIndex = previewElement
+			? parseInt(previewElement.getAttribute('data-row-id') || '0')
+			: null;
 
-		// 모든 미리보기 클래스 제거
-		document.querySelectorAll('.preview-move').forEach((el) => {
-			el.classList.remove('preview-move');
+		document.querySelectorAll('.preview-move, .preview-move-invalid').forEach((el) => {
+			el.classList.remove('preview-move', 'preview-move-invalid');
 		});
 
-		if (onMoveRows) {
-			onMoveRows();
+		const minSelectedIndex = Math.min(...selectedRows);
+		const maxSelectedIndex = Math.max(...selectedRows);
+
+		if (
+			targetIndex !== null &&
+			(targetIndex < minSelectedIndex || targetIndex > maxSelectedIndex + 1)
+		) {
+			onMoveRows?.();
 		}
 
-		// 드래그 상태 초기화
-		setIsDragging(false);
-		setStartY(0);
-		setDragOffset(0);
-	};
+		setDragState({
+			isDragging: false,
+			startY: 0,
+			dragOffset: 0,
+		});
+	}, [dragState.isDragging, selectedRows, onMoveRows]);
 
-	/**
-	 * 이벤트 리스너 및 상태 관리를 위한 부수 효과
-	 */
 	useEffect(() => {
 		calculateHeights();
 		window.addEventListener('resize', calculateHeights);
 		return () => window.removeEventListener('resize', calculateHeights);
-	}, [selectedRows, rows]);
+	}, [calculateHeights, rows]);
 
-	// ESC 키 감지를 위한 이벤트 리스너
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
-			if (e.key === 'Escape' && isDragging) {
-				setIsDragging(false);
-				setStartY(0);
-				setDragOffset(0);
-
-				// 모든 미리보기 클래스 제거
-				document.querySelectorAll('.preview-move').forEach((el) => {
-					el.classList.remove('preview-move');
-				});
-
+			if (e.key === 'Escape' && dragState.isDragging) {
+				handleMouseUp();
 				onPreviewMove?.(0, null);
-				document.removeEventListener('mousemove', handleMouseMove);
-				document.removeEventListener('mouseup', handleMouseUp);
 			}
 		};
 
-		if (isDragging) {
-			document.addEventListener('keydown', handleKeyDown);
-			return () => document.removeEventListener('keydown', handleKeyDown);
-		}
-	}, [isDragging]);
-
-	// 컴포넌트 언마운트 시 이벤트 리스너 정리
-	useEffect(() => {
-		return () => {
+		const cleanup = () => {
 			document.removeEventListener('mousemove', handleMouseMove);
 			document.removeEventListener('mouseup', handleMouseUp);
+			document.removeEventListener('keydown', handleKeyDown);
 		};
-	}, [handleMouseMove]); // handleMouseMove 의존성 추가
 
-	// 드래그 시작 시 이벤트 리스너 설정
-	useEffect(() => {
-		if (isDragging) {
+		if (dragState.isDragging) {
 			document.addEventListener('mousemove', handleMouseMove);
 			document.addEventListener('mouseup', handleMouseUp);
-			return () => {
-				document.removeEventListener('mousemove', handleMouseMove);
-				document.removeEventListener('mouseup', handleMouseUp);
-			};
+			document.addEventListener('keydown', handleKeyDown);
+			return cleanup;
 		}
-	}, [isDragging, handleMouseMove]);
 
-	// 선택된 행이 없으면 렌더링하지 않음
+		cleanup();
+	}, [dragState.isDragging, handleMouseMove, handleMouseUp, onPreviewMove]);
+
 	if (selectedRows.length === 0) return null;
 
 	return (
 		<div
 			ref={sliderRef}
 			className="absolute h-full -left-8"
-			style={{ height: `${totalHeight}px` }}
+			style={{ height: `${measurements.totalHeight}px` }}
 		>
 			<RangeSliderBar
-				totalHeight={totalHeight}
-				rangeHeight={rangeHeight}
-				handlePosition={handlePosition}
-				isDragging={isDragging}
-				dragOffset={dragOffset}
+				totalHeight={measurements.totalHeight}
+				rangeHeight={measurements.rangeHeight}
+				handlePosition={measurements.handlePosition}
+				isDragging={dragState.isDragging}
+				dragOffset={dragState.dragOffset}
 				onMouseDown={handleMouseDown}
 			/>
 
 			<DragHandleButton
-				handlePosition={handlePosition}
-				isDragging={isDragging}
-				dragOffset={dragOffset}
+				handlePosition={measurements.handlePosition}
+				isDragging={dragState.isDragging}
+				dragOffset={dragState.dragOffset}
 				onMouseDown={handleMouseDown}
 			/>
 		</div>

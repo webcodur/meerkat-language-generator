@@ -47,13 +47,26 @@ export default function useRowSelection(
 
 		const newRows = [...rows];
 		const selectedRowsData = selectedRows.map((index) => newRows[index]);
+		const minSelectedIndex = Math.min(...selectedRows);
+		const maxSelectedIndex = Math.max(...selectedRows);
+		const targetIndex = previewMove.toIndex;
+
+		// 선택된 행들을 제거
 		const remainingRows = newRows.filter((_, index) => !selectedRows.includes(index));
 
-		remainingRows.splice(previewMove.toIndex, 0, ...selectedRowsData);
+		// 목표 인덱스 조정
+		let adjustedTargetIndex = targetIndex;
+		if (targetIndex > maxSelectedIndex) {
+			adjustedTargetIndex -= selectedRows.length;
+		}
 
+		// 새 위치에 선택된 행들 삽입
+		remainingRows.splice(adjustedTargetIndex, 0, ...selectedRowsData);
+
+		// 새로운 선택된 행들의 인덱스 계산
 		const newSelectedRows = Array.from(
 			{ length: selectedRows.length },
-			(_, i) => previewMove.toIndex + i
+			(_, i) => adjustedTargetIndex + i
 		);
 
 		setRows(remainingRows);
