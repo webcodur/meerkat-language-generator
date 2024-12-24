@@ -22,7 +22,8 @@ export interface SaveTranslationsParams {
 	isVerified: Record<string, boolean>;
 }
 
-export interface PreviewMoveType {
+export type PreviewMoveType = {
 	fromIndex: number;
-	toIndex: number | null;
-}
+	toIndex: number;
+	isDragging: boolean;
+};

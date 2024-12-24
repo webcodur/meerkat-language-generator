@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Translation } from '@/app/types/translate';
-import { generateTranslations, loadTranslations } from '../actions/translationActions';
+import { Translation } from '@/types/translate';
+import { generateTranslations, loadTranslations } from '@/app/actions/translationActions';
 
 const processTranslationData = (translationData: any): Translation[] => {
 	const existingRows: Translation[] = [];

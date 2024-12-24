@@ -1,6 +1,6 @@
 import React from 'react';
 import handleDownload from './handleDownload';
-import { Translation } from '@/app/types/translate';
+import { Translation } from '@/types/translate';
 import { FiDownload } from 'react-icons/fi';
 
 interface JsonDownLoaderProps {

@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Translation } from '@/app/types/translate';
+import { Translation } from '@/types/translate';
 
 /**
  * 행 이동을 미리보기 하기 위한 인터페이스
  * @property fromIndex - 이동할 행의 현재 위치
  * @property toIndex - 이동할 행의 목표 위치 (null일 경우 이동 대상 없음)
  */
-interface PreviewMoveType {
+export interface PreviewMoveType {
 	fromIndex: number;
 	toIndex: number | null;
 }

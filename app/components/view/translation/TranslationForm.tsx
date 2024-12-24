@@ -1,6 +1,6 @@
 'use client';
-import { Translation } from '@/app/types/translate';
-import { PreviewMoveType } from '@/app/types/translate';
+import { Translation } from '@/types/translate';
+import type { PreviewMoveType } from '@/hooks/useRowSelection';
 
 import ModelInfo from './modelInfo/ModelInfo';
 import LockButton from './lockButton/LockButton';
@@ -11,9 +11,9 @@ import TranslationRow from './translationRow/TranslationRow';
 import DragHandle from './dragHandle/DragHandle';
 import LoadingState from '@/app/components/ui/LoadingState';
 import ErrorState from '@/app/components/ui/ErrorState';
-import useTranslations from '@/app/hooks/useTranslations';
-import useRowSelection from '@/app/hooks/useRowSelection';
-import usePasswordLock from '@/app/hooks/usePasswordLock';
+import useTranslations from '@/hooks/useTranslations';
+import useRowSelection from '@/hooks/useRowSelection';
+import usePasswordLock from '@/hooks/usePasswordLock';
 
 const getRowStyle = (
 	index: number,
@@ -115,7 +115,7 @@ export default function TranslationForm() {
 
 	// 메인 폼 렌더링
 	return (
-		<div className="mx-auto max-w-7xl">
+		<div className="flex w-full">
 			<div className="relative p-6 pb-32 border rounded-lg">
 				<ModelInfo model={'gpt-4o-mini'} />
 				<TableHeader />

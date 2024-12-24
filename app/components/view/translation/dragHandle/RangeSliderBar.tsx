@@ -1,5 +1,5 @@
 import React from 'react';
-import { HANDLE_VERTICAL_OFFSET } from '@/app/data/constant/dragHandle';
+import { HANDLE_VERTICAL_OFFSET } from '@/data/constant/dragHandle';
 
 interface RangeSliderBarProps {
 	totalHeight: number;
@@ -40,7 +40,7 @@ export const RangeSliderBar: React.FC<RangeSliderBarProps> = ({
 
 			{/* 선택된 영역 표시 바 */}
 			<div
-				className={`absolute left-3 w-3 bg-primary-500 cursor-grab active:cursor-grabbing ${
+				className={`absolute left-3 w-3 bg-sky-500 cursor-grab active:cursor-grabbing ${
 					isDragging ? 'opacity-50' : ''
 				}`}
 				style={getRangeBarStyle()}

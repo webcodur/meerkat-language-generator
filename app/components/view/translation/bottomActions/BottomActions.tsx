@@ -1,4 +1,4 @@
-import { Translation } from '@/app/types/translate'; // 번역 타입
+import { Translation } from '@/types/translate'; // 번역 타입
 import { saveTranslations } from '@/app/actions/translationActions'; // 번역 데이터 저장을 위한 액션
 import JsonDownLoader from './jsonDownLoader/JsonDownLoader';
 import { FaPlus, FaDatabase, FaUndo } from 'react-icons/fa';

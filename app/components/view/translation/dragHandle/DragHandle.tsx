@@ -1,10 +1,11 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { RangeSliderBar } from './RangeSliderBar';
 import { DragHandleButton } from './DragHandleButton';
-import { HANDLE_VERTICAL_OFFSET } from '@/app/data/constant/dragHandle';
+import { HANDLE_VERTICAL_OFFSET } from '@/data/constant/dragHandle';
 
 interface DragHandleProps {
 	selectedRows: number[];
+	totalRows: number;
 	onMoveRows?: () => void;
 	onPreviewMove?: (fromIndex: number, toIndex: number | null) => void;
 	rows: any[];
@@ -32,6 +33,7 @@ interface RowBoundary {
 
 export default function DragHandle({
 	selectedRows,
+	totalRows,
 	onMoveRows,
 	onPreviewMove,
 	rows,

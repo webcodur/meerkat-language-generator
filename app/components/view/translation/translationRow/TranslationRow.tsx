@@ -1,6 +1,6 @@
 import React from 'react';
-import { Translation } from '@/app/types/translate';
-import { COLUMN_WIDTHS } from '@/app/data/constant/columnWidths';
+import { Translation } from '@/types/translate';
+import { COLUMN_WIDTHS } from '@/data/constant/columnWidths';
 import { FaMinus } from 'react-icons/fa';
 
 interface TranslationRowProps {
@@ -34,7 +34,14 @@ export default function TranslationRow({
 
 	return (
 		<div data-row-id={index} className="flex items-center space-x-2 py-2 border-b min-h-[42px]">
-			<div className={`${COLUMN_WIDTHS.checkbox} flex items-center justify-center`}>
+			<div
+				className={`flex items-center justify-center`}
+				style={{
+					width: COLUMN_WIDTHS.checkbox,
+					minWidth: COLUMN_WIDTHS.checkbox,
+					maxWidth: COLUMN_WIDTHS.checkbox,
+				}}
+			>
 				<input
 					type="checkbox"
 					checked={selectedRows.includes(index)}
@@ -42,13 +49,25 @@ export default function TranslationRow({
 					className="w-5 h-5 text-primary-600 border-2 border-gray-300 rounded cursor-pointer focus:ring-primary-500"
 				/>
 			</div>
-			<div className={`${COLUMN_WIDTHS.number} flex items-center justify-center`}>
+			<div
+				className={`flex items-center justify-center`}
+				style={{
+					width: COLUMN_WIDTHS.number,
+					minWidth: COLUMN_WIDTHS.number,
+					maxWidth: COLUMN_WIDTHS.number,
+				}}
+			>
 				{index + 1}
 			</div>
 			<textarea
 				value={row.koreanWord}
 				onChange={(e) => onUpdate(index, { ...row, koreanWord: e.target.value })}
-				className={`${COLUMN_WIDTHS.koreanWord} ${inputStyle} resize-none min-h-[38px] overflow-hidden`}
+				className={`${inputStyle} resize-none min-h-[38px] overflow-hidden`}
+				style={{
+					width: COLUMN_WIDTHS.koreanWord,
+					minWidth: COLUMN_WIDTHS.koreanWord,
+					maxWidth: COLUMN_WIDTHS.koreanWord,
+				}}
 				rows={1}
 			/>
 			<textarea
@@ -59,19 +78,28 @@ export default function TranslationRow({
 						koreanDescription: e.target.value,
 					})
 				}
-				className={`${COLUMN_WIDTHS.koreanDesc} ${inputStyle} resize-none min-h-[38px] overflow-hidden`}
+				className={`${inputStyle} resize-none min-h-[38px] overflow-hidden`}
+				style={{
+					width: COLUMN_WIDTHS.koreanDesc,
+					minWidth: COLUMN_WIDTHS.koreanDesc,
+					maxWidth: COLUMN_WIDTHS.koreanDesc,
+				}}
 				rows={1}
 			/>
 			<button
 				type="button"
 				onClick={() => onSubmit(index)}
 				disabled={loadingRows[index] || row.isVerified}
-				className={`${COLUMN_WIDTHS.button} ${buttonClass} 
-					${
-						loadingRows[index] || row.isVerified
-							? 'bg-gray-400 cursor-not-allowed'
-							: 'bg-primary-500 hover:bg-primary-600'
-					}`}
+				className={`${buttonClass} ${
+					loadingRows[index] || row.isVerified
+						? 'bg-gray-400 cursor-not-allowed'
+						: 'bg-primary-500 hover:bg-primary-600'
+				}`}
+				style={{
+					width: COLUMN_WIDTHS.button,
+					minWidth: COLUMN_WIDTHS.button,
+					maxWidth: COLUMN_WIDTHS.button,
+				}}
 			>
 				{loadingRows[index] ? '생성중...' : '생성'}
 			</button>
@@ -80,9 +108,14 @@ export default function TranslationRow({
 				value={row.englishKey}
 				onChange={(e) => onUpdate(index, { ...row, englishKey: e.target.value })}
 				disabled={row.isVerified}
-				className={`${COLUMN_WIDTHS.englishKey} ${inputStyle} ${
+				className={`${inputStyle} ${
 					row.isVerified ? 'bg-gray-100 cursor-not-allowed' : ''
 				}`}
+				style={{
+					width: COLUMN_WIDTHS.englishKey,
+					minWidth: COLUMN_WIDTHS.englishKey,
+					maxWidth: COLUMN_WIDTHS.englishKey,
+				}}
 			/>
 			<input
 				type="text"
@@ -94,9 +127,12 @@ export default function TranslationRow({
 					})
 				}
 				disabled={row.isVerified}
-				className={`${COLUMN_WIDTHS.translation} ${inputStyle} ${
-					row.isVerified ? 'bg-gray-100 cursor-not-allowed' : ''
-				}`}
+				className={`${inputStyle}`}
+				style={{
+					width: COLUMN_WIDTHS.translation,
+					minWidth: COLUMN_WIDTHS.translation,
+					maxWidth: COLUMN_WIDTHS.translation,
+				}}
 			/>
 			<input
 				type="text"
@@ -108,12 +144,24 @@ export default function TranslationRow({
 					})
 				}
 				disabled={row.isVerified}
-				className={`${COLUMN_WIDTHS.translation} ${inputStyle} text-right dir-rtl ${
+				className={`${inputStyle} text-right dir-rtl ${
 					row.isVerified ? 'bg-gray-100 cursor-not-allowed' : ''
 				}`}
+				style={{
+					width: COLUMN_WIDTHS.translation,
+					minWidth: COLUMN_WIDTHS.translation,
+					maxWidth: COLUMN_WIDTHS.translation,
+				}}
 				dir="rtl"
 			/>
-			<div className={`${COLUMN_WIDTHS.button} flex items-center justify-center`}>
+			<div
+				className={`flex items-center justify-center`}
+				style={{
+					width: COLUMN_WIDTHS.button,
+					minWidth: COLUMN_WIDTHS.button,
+					maxWidth: COLUMN_WIDTHS.button,
+				}}
+			>
 				<input
 					type="checkbox"
 					checked={row.isVerified}
@@ -126,16 +174,22 @@ export default function TranslationRow({
 					className="w-6 h-6 text-primary-600 scale-125 border-2 border-gray-300 rounded cursor-pointer focus:ring-primary-500"
 				/>
 			</div>
-			<div className={`${COLUMN_WIDTHS.number} flex items-center justify-center`}>
+			<div
+				className={`flex items-center justify-center`}
+				style={{
+					width: COLUMN_WIDTHS.number,
+					minWidth: COLUMN_WIDTHS.number,
+					maxWidth: COLUMN_WIDTHS.number,
+				}}
+			>
 				<button
 					onClick={() => onDelete(index)}
 					disabled={row.isVerified || disableDelete}
-					className={`w-[38px] ${buttonClass}
-						${
-							row.isVerified || disableDelete
-								? 'bg-gray-400 cursor-not-allowed'
-								: 'bg-red-500 hover:bg-red-600'
-						}`}
+					className={`w-[38px] ${buttonClass} ${
+						row.isVerified || disableDelete
+							? 'bg-gray-400 cursor-not-allowed'
+							: 'bg-red-500 hover:bg-red-600'
+					}`}
 				>
 					<FaMinus className="w-3 h-3" />
 				</button>
