@@ -2,34 +2,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { RangeSliderBar } from './RangeSliderBar';
 import { DragHandleButton } from './DragHandleButton';
 import { HANDLE_VERTICAL_OFFSET } from '@/data/constant/dragHandle';
-
-interface DragHandleProps {
-	selectedRows: number[];
-	totalRows: number;
-	onMoveRows?: () => void;
-	onPreviewMove?: (fromIndex: number, toIndex: number | null) => void;
-	rows: any[];
-}
-
-interface DragState {
-	isDragging: boolean;
-	startY: number;
-	dragOffset: number;
-}
-
-interface Measurements {
-	totalHeight: number;
-	rangeHeight: number;
-	handlePosition: number;
-	rowPositions: number[];
-}
-
-interface RowBoundary {
-	top: number;
-	bottom: number;
-	index: number;
-	height: number;
-}
+import { DragHandleProps, DragState, Measurements, RowBoundary } from '@/types/dragHandle';
 
 export default function DragHandle({
 	selectedRows,
