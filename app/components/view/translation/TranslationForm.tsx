@@ -135,8 +135,8 @@ export default function TranslationForm() {
           {/* 테이블 헤더 */}
           <TableHeader />
 
-          <div className="relative overflow-x-auto">
-            <div className="min-w-max">
+          <div className="relative overflow-visible">
+            <div className="min-w-max relative">
               {/* 행 이동 미리보기 */}
               {selectedRows.length > 0 && (
                 <DragHandle
@@ -152,6 +152,7 @@ export default function TranslationForm() {
               {rows.map((row, index) => (
                 <div
                   key={index}
+                  data-row-id={index}
                   style={getRowStyle(index, selectedRows, previewMove)}
                 >
                   <TranslationRow

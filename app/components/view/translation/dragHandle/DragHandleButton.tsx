@@ -1,7 +1,8 @@
 import React from "react";
+import { HandlePosition } from "@/types/dragHandle";
 
 interface DragHandleButtonProps {
-  handlePosition: number;
+  handlePosition: HandlePosition;
   isDragging: boolean;
   dragOffset: number;
   onMouseDown: (e: React.MouseEvent) => void;
@@ -14,7 +15,7 @@ export const DragHandleButton: React.FC<DragHandleButtonProps> = ({
   onMouseDown,
 }) => {
   const getHandleStyle = () => ({
-    top: `${handlePosition}px`,
+    top: `${handlePosition.center - 14}px`,
     transition: isDragging ? "none" : "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
     transform: isDragging ? `translateY(${dragOffset}px)` : "none",
     willChange: isDragging ? "transform" : "auto",

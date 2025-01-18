@@ -1,26 +1,22 @@
 import React from "react";
-import { HANDLE_VERTICAL_OFFSET } from "@/data/constant/dragHandle";
+import { HandlePosition } from "@/types/dragHandle";
 
 interface RangeSliderBarProps {
-  totalHeight: number;
-  rangeHeight: number;
-  handlePosition: number;
+  handlePosition: HandlePosition;
   isDragging: boolean;
   dragOffset: number;
   onMouseDown: (e: React.MouseEvent) => void;
 }
 
 export const RangeSliderBar: React.FC<RangeSliderBarProps> = ({
-  totalHeight,
-  rangeHeight,
   handlePosition,
   isDragging,
   dragOffset,
   onMouseDown,
 }) => {
   const getRangeBarStyle = () => ({
-    height: `${rangeHeight}px`,
-    top: `${handlePosition - rangeHeight / 2 + HANDLE_VERTICAL_OFFSET}px`,
+    height: `${handlePosition.height}px`,
+    top: `${handlePosition.top}px`,
     transition: isDragging ? "none" : "all 0.15s cubic-bezier(0.4, 0, 0.2, 1)",
     transform: isDragging ? `translateY(${dragOffset}px)` : "none",
     willChange: isDragging ? "transform" : "auto",
