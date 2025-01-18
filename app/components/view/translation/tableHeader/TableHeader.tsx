@@ -1,42 +1,27 @@
-import { COLUMN_WIDTHS } from "@/data/constant/columnWidths";
+import { COLUMNS } from "@/data/constant/columns";
 
 const headerCellStyle =
-  "text-center flex items-center justify-center text-base font-medium text-primary-700 bg-gray-800 text-white border-b-2 border-gray-700 py-2 shadow-lg hover:shadow-xl transition-shadow duration-300";
-
-type ColumnType = keyof typeof COLUMN_WIDTHS;
-
-const headers: Array<{ type: ColumnType; text: string }> = [
-  { type: "checkbox", text: "선택" },
-  { type: "number", text: "번호" },
-  { type: "koreanWord", text: "한국어 단어 *" },
-  { type: "koreanDesc", text: "한국어 설명" },
-  { type: "button", text: "생성" },
-  { type: "englishKey", text: "영문 키값" },
-  { type: "translation", text: "영어" },
-  { type: "translation", text: "아랍어" },
-  { type: "button", text: "검수" },
-  { type: "number", text: "제거" },
-];
+  "text-center flex items-center justify-center text-base font-medium text-primary-700 bg-gray-800 text-white border-b-2 border-gray-700 py-2 shadow-sm";
 
 export default function TableHeader() {
   return (
-    <div className="flex pb-2 space-x-2 border-b">
-      {headers.map((header, index) => {
-        const width = COLUMN_WIDTHS[header.type];
-        return (
+    <div className="min-w-max sticky top-0 bg-white z-10 mb-2">
+      <div className="flex gap-3">
+        {COLUMNS.map((column, index) => (
           <div
             key={index}
             className={headerCellStyle}
             style={{
-              width,
-              minWidth: width,
-              maxWidth: width,
+              width: column.width,
+              minWidth: column.width,
+              maxWidth: column.width,
+              borderRadius: "4px",
             }}
           >
-            {header.text}
+            {column.text}
           </div>
-        );
-      })}
+        ))}
+      </div>
     </div>
   );
 }

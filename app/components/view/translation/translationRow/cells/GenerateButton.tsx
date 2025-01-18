@@ -1,6 +1,5 @@
-import { COLUMN_WIDTHS } from "@/data/constant/columnWidths";
+import { COLUMNS } from "@/data/constant/columns";
 import { Translation } from "@/types/translate";
-import { buttonStyle } from "../styles";
 
 interface GenerateButtonProps {
   row: Translation;
@@ -15,23 +14,45 @@ export default function GenerateButton({
   loadingRows,
   onSubmit,
 }: GenerateButtonProps) {
+  const isLoading = loadingRows[index];
+  const isDisabled = !row.koreanWord || row.isVerified;
+
   return (
-    <button
-      type="button"
-      onClick={() => onSubmit(index)}
-      disabled={loadingRows[index] || row.isVerified}
-      className={`${buttonStyle} ${
-        loadingRows[index] || row.isVerified
-          ? "bg-gray-400 cursor-not-allowed"
-          : "bg-primary-500 hover:bg-primary-600"
-      }`}
+    <div
       style={{
-        width: COLUMN_WIDTHS.button,
-        minWidth: COLUMN_WIDTHS.button,
-        maxWidth: COLUMN_WIDTHS.button,
+        width: COLUMNS[4].width,
+        minWidth: COLUMNS[4].width,
+        maxWidth: COLUMNS[4].width,
       }}
+      className="flex items-center justify-center"
     >
-      {loadingRows[index] ? "생성중..." : "생성"}
-    </button>
+      <button
+        onClick={() => onSubmit(index)}
+        disabled={isDisabled || isLoading}
+        className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+          isDisabled
+            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+            : "bg-blue-100 text-blue-600 hover:bg-blue-200"
+        }`}
+      >
+        {isLoading ? (
+          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+        ) : (
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M14 5l7 7m0 0l-7 7m7-7H3"
+            />
+          </svg>
+        )}
+      </button>
+    </div>
   );
 }

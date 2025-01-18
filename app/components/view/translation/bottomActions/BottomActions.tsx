@@ -17,9 +17,8 @@ interface BottomActionsProps {
 const handleDuplicate = (rows: Translation[]) => {
   const timestamp = new Date().getTime();
   const newRow: Translation = {
-    englishKey: `temp_${timestamp}`,
+    koreanWord: `임시_${timestamp}`,
     arabicTranslation: "",
-    koreanWord: "",
     englishTranslation: "",
     isVerified: false,
     koreanDescription: "",
@@ -42,10 +41,10 @@ export default function BottomActions({
 
   // 번역 데이터 저장 핸들러
   const handleSave = async () => {
-    // 빈 영문 키값 체크
-    const hasEmptyKeys = rows.some((row) => !row.englishKey.trim());
+    // 빈 한국어 키값 체크
+    const hasEmptyKeys = rows.some((row) => !row.koreanWord.trim());
     if (hasEmptyKeys) {
-      alert("모든 행의 영문 키값을 입력해주세요.");
+      alert("모든 행의 한국어 키값을 입력해주세요.");
       return;
     }
 
@@ -58,8 +57,8 @@ export default function BottomActions({
 
     // 각 행의 데이터를 언어별 객체에 매핑
     rows.forEach((row) => {
-      if (row.englishKey) {
-        const key = row.englishKey;
+      if (row.koreanWord) {
+        const key = row.koreanWord;
         arTranslations[key] = row.arabicTranslation;
         koTranslations[key] = row.koreanWord;
         enTranslations[key] = row.englishTranslation;
@@ -90,6 +89,7 @@ export default function BottomActions({
       <div className="px-6 mx-auto max-w-7xl">
         <div className="flex flex-col space-y-4">
           <div className="flex justify-center space-x-4">
+            {/* 선택해제 버튼 */}
             <button
               type="button"
               onClick={onClearSelection}
@@ -102,6 +102,7 @@ export default function BottomActions({
               선택해제
             </button>
 
+            {/* 행 추가 버튼 */}
             <button
               type="button"
               onClick={onDuplicate}
@@ -113,6 +114,7 @@ export default function BottomActions({
               <FaPlus className={ICON_CLASS} />행 추가
             </button>
 
+            {/* DB저장 버튼 */}
             <button
               type="button"
               onClick={handleSave}
@@ -125,7 +127,7 @@ export default function BottomActions({
               DB저장
             </button>
           </div>
-
+          {/* 다운로드 버튼 */}
           <JsonDownLoader rows={rows} />
         </div>
       </div>

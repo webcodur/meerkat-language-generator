@@ -1,4 +1,4 @@
-import { COLUMN_WIDTHS } from "@/data/constant/columnWidths";
+import { COLUMNS } from "@/data/constant/columns";
 
 interface CheckboxCellProps {
   index: number;
@@ -13,18 +13,18 @@ export default function CheckboxCell({
 }: CheckboxCellProps) {
   return (
     <div
-      className="flex items-center justify-center"
       style={{
-        width: COLUMN_WIDTHS.checkbox,
-        minWidth: COLUMN_WIDTHS.checkbox,
-        maxWidth: COLUMN_WIDTHS.checkbox,
+        width: COLUMNS[0].width,
+        minWidth: COLUMNS[0].width,
+        maxWidth: COLUMNS[0].width,
       }}
+      className="flex items-center justify-center"
     >
       <input
         type="checkbox"
         checked={selectedRows.includes(index)}
         onChange={(e) => onRowSelect(index, e.target.checked)}
-        className="w-5 h-5 border-2 border-gray-300 rounded cursor-pointer text-primary-600 focus:ring-primary-500"
+        className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
       />
     </div>
   );

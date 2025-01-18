@@ -8,7 +8,6 @@ export interface TranslationFormData {
 export interface Translation {
   koreanWord: string;
   koreanDescription: string;
-  englishKey: string;
   englishTranslation: string;
   arabicTranslation: string;
   isVerified: boolean;

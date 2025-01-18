@@ -16,7 +16,9 @@ export default function KoreanInputCell({
   type,
 }: KoreanInputCellProps) {
   const width =
-    type === "word" ? COLUMN_WIDTHS.koreanWord : COLUMN_WIDTHS.koreanDesc;
+    type === "word"
+      ? COLUMN_WIDTHS.koreanWord
+      : COLUMN_WIDTHS.koreanDescription;
   const value = type === "word" ? row.koreanWord : row.koreanDescription;
 
   return (

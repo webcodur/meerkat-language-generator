@@ -129,85 +129,98 @@ export default function TranslationForm() {
     totalRows > 0 ? (translatedCount / totalRows) * 100 : 0;
 
   return (
-    <div className="flex w-full">
-      <div className="relative p-6 pb-32 border rounded-lg">
-        <TableHeader />
-        <div className="relative">
-          {selectedRows.length > 0 && (
-            <DragHandle
-              selectedRows={selectedRows}
-              totalRows={rows.length}
-              onMoveRows={handleMoveRows}
-              onPreviewMove={handlePreviewMove}
-              rows={rows}
+    <div className="flex justify-center w-full min-h-screen bg-gray-50 p-4">
+      <div className="w-full max-w-[1400px]">
+        <div className="relative p-6 pb-32 bg-white border rounded-lg shadow-sm overflow-hidden">
+          {/* 테이블 헤더 */}
+          <TableHeader />
+
+          <div className="relative overflow-x-auto">
+            <div className="min-w-max">
+              {/* 행 이동 미리보기 */}
+              {selectedRows.length > 0 && (
+                <DragHandle
+                  selectedRows={selectedRows}
+                  totalRows={rows.length}
+                  onMoveRows={handleMoveRows}
+                  onPreviewMove={handlePreviewMove}
+                  rows={rows}
+                />
+              )}
+
+              {/* 행 렌더링 */}
+              {rows.map((row, index) => (
+                <div
+                  key={index}
+                  style={getRowStyle(index, selectedRows, previewMove)}
+                >
+                  <TranslationRow
+                    row={row}
+                    index={index}
+                    loadingRows={loadingRows}
+                    onUpdate={handleRowUpdate}
+                    onSubmit={handleSubmit}
+                    onDelete={handleDelete}
+                    selectedRows={selectedRows}
+                    onRowSelect={handleRowSelect}
+                    disableDelete={selectedRows.length > 0}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 하단 액션 버튼 */}
+          <BottomActions
+            onDuplicate={() =>
+              setRows((prevRows) => {
+                const newRow: Translation = {
+                  koreanWord: "",
+                  koreanDescription: "",
+                  englishTranslation: "",
+                  arabicTranslation: "",
+                  isVerified: false,
+                };
+                return [...prevRows, newRow];
+              })
+            }
+            isLocked={isLocked}
+            disableActions={selectedRows.length > 0}
+            rows={rows}
+            onClearSelection={() => setSelectedRows([])}
+          />
+
+          {/* 비밀번호 버튼 */}
+          <LockButton
+            isLocked={isLocked}
+            onShowModal={() => setShowModal(true)}
+          />
+          {/* 비밀번호 모달 */}
+          {showModal && (
+            <PasswordModal
+              password={password}
+              passwordError={passwordError}
+              onPasswordChange={handlePasswordChange}
+              onSubmit={handlePasswordSubmit}
+              onClose={handleModalClose}
             />
           )}
-
-          {rows.map((row, index) => (
-            <div
-              key={index}
-              style={getRowStyle(index, selectedRows, previewMove)}
-            >
-              <TranslationRow
-                row={row}
-                index={index}
-                loadingRows={loadingRows}
-                onUpdate={handleRowUpdate}
-                onSubmit={handleSubmit}
-                onDelete={handleDelete}
-                selectedRows={selectedRows}
-                onRowSelect={handleRowSelect}
-                disableDelete={selectedRows.length > 0}
-              />
-            </div>
-          ))}
         </div>
 
-        <BottomActions
-          onDuplicate={() =>
-            setRows((prevRows) => {
-              const timestamp = new Date().getTime();
-              const newRow: Translation = {
-                englishKey: `temp_${timestamp}`,
-                arabicTranslation: "",
-                koreanWord: "",
-                englishTranslation: "",
-                isVerified: false,
-                koreanDescription: "",
-              };
-              return [...prevRows, newRow];
-            })
-          }
-          isLocked={isLocked}
-          disableActions={selectedRows.length > 0}
-          rows={rows}
-          onClearSelection={() => setSelectedRows([])}
-        />
-
-        <LockButton
-          isLocked={isLocked}
-          onShowModal={() => setShowModal(true)}
-        />
-        {showModal && (
-          <PasswordModal
-            password={password}
-            passwordError={passwordError}
-            onPasswordChange={handlePasswordChange}
-            onSubmit={handlePasswordSubmit}
-            onClose={handleModalClose}
-          />
-        )}
-
         {/* 통계 */}
-        <div className="fixed bottom-0 left-0 m-6 p-4 bg-gray-100 border-t z-[100] w-[250px] text-center">
-          <div className="flex flex-col space-y-2 ">
-            <div className="flex justify-between w-full ">
-              <p className="text-lg">번역 완료 비율:</p>
-              <p className="text-lg">{completionRate.toFixed(2)}%</p>
-            </div>
-            <div className="flex justify-between w-full">
-              <p className="text-lg">미번역 항목 수:</p>
-              <p className="text-lg">{untranslatedCount}</p>
+        <div className="fixed bottom-0 left-0 right-0 m-6">
+          <div className="mx-auto max-w-[1400px]">
+            <div className="p-4 bg-white border rounded-lg shadow-sm">
+              <div className="flex flex-col space-y-2">
+                <div className="flex justify-between w-full">
+                  <p className="text-lg">번역 완료 비율:</p>
+                  <p className="text-lg">{completionRate.toFixed(2)}%</p>
+                </div>
+                <div className="flex justify-between w-full">
+                  <p className="text-lg">미번역 항목 수:</p>
+                  <p className="text-lg">{untranslatedCount}</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>

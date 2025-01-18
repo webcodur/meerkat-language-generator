@@ -1,4 +1,4 @@
-import { COLUMN_WIDTHS } from "@/data/constant/columnWidths";
+import { COLUMNS } from "@/data/constant/columns";
 
 interface RowNumberCellProps {
   index: number;
@@ -7,12 +7,12 @@ interface RowNumberCellProps {
 export default function RowNumberCell({ index }: RowNumberCellProps) {
   return (
     <div
-      className="flex items-center justify-center"
       style={{
-        width: COLUMN_WIDTHS.number,
-        minWidth: COLUMN_WIDTHS.number,
-        maxWidth: COLUMN_WIDTHS.number,
+        width: COLUMNS[1].width,
+        minWidth: COLUMNS[1].width,
+        maxWidth: COLUMNS[1].width,
       }}
+      className="flex items-center justify-center text-gray-500"
     >
       {index + 1}
     </div>

@@ -7,18 +7,16 @@ import { NextResponse } from "next/server";
  */
 export async function POST(request: Request) {
   const client = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  const TRANSLATION_PROMPT_TEMPLATE = `다음 한국어 단어를 영어로 번역하고, 영문 키값과 아랍어 번역을 제공해주세요.
+  const TRANSLATION_PROMPT_TEMPLATE = `다음 한국어 단어를 영어와 아랍어로 번역해주세요.
 각 줄마다 다음과 같은 형식으로 응답해주세요:
 
 한국어: [한국어 단어]
 영어: [영어 번역]
-영문 키값: [스네이크 케이스로 된 영문 키]
 아랍어: [아랍어 번역]
 
 예시:
 한국어: 안녕하세요
 영어: Hello
-영문 키값: hello
 아랍어: مرحبا
 
 한국어 단어: {ko}
@@ -39,7 +37,7 @@ export async function POST(request: Request) {
       {
         role: "system" as const,
         content:
-          "당신은 전문 번역가입니다. 영문 키값은 스네이크 케이스로 작성하고, 특수문자나 공백 없이 영문 소문자만 사용해주세요.",
+          "당신은 전문 번역가입니다. 정확하고 자연스러운 번역을 제공해주세요.",
       },
       {
         role: "user" as const,
@@ -62,7 +60,6 @@ export async function POST(request: Request) {
     const translations = {
       ko: ko, // 원본 한국어 텍스트
       en: "", // 영어 번역
-      englishKey: "", // 영문 키값
       ar: "", // 아랍어 번역
       description: description, // 설명 (있는 경우)
     };
@@ -71,8 +68,6 @@ export async function POST(request: Request) {
     lines.forEach((line) => {
       if (line.startsWith("영어:")) {
         translations.en = line.replace("영어:", "").trim();
-      } else if (line.startsWith("영문 키값:")) {
-        translations.englishKey = line.replace("영문 키값:", "").trim();
       } else if (line.startsWith("아랍어:")) {
         translations.ar = line.replace("아랍어:", "").trim();
       }

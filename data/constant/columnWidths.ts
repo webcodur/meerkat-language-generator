@@ -1,9 +1,8 @@
 export const COLUMN_WIDTHS = {
-  checkbox: "40px",
-  number: "60px",
-  koreanWord: "180px",
-  koreanDesc: "200px",
-  button: "90px",
-  englishKey: "150px",
-  translation: "180px",
+  checkbox: "48px",
+  number: "48px",
+  koreanWord: "240px",
+  koreanDescription: "160px",
+  button: "48px",
+  translation: "280px",
 } as const;
