@@ -1,8 +1,12 @@
 import { Translation } from "@/types/translate"; // 번역 타입
-import { saveTranslations } from "@/app/actions/translationActions"; // 번역 데이터 저장을 위한 액션
+import {
+  saveTranslations,
+  bulkTranslate,
+} from "@/app/actions/translationActions"; // 번역 데이터 저장을 위한 액션
 import JsonDownLoader from "./jsonDownLoader/JsonDownLoader";
-import { FaPlus, FaDatabase, FaUndo } from "react-icons/fa";
+import { FaPlus, FaDatabase, FaUndo, FaLanguage } from "react-icons/fa";
 import { highTechStyle } from "@/data/constant/highTechStyle";
+import { useState } from "react";
 
 // 컴포넌트 props 인터페이스 정의
 interface BottomActionsProps {
@@ -11,6 +15,7 @@ interface BottomActionsProps {
   disableActions: boolean; // 액션 비활성화 상태
   rows: Translation[]; // 번역 데이터 배열
   onClearSelection?: () => void; // 선택 해제 핸들러 함수
+  onUpdateRows: (updatedRows: Translation[]) => void; // 새로운 prop 추가
 }
 
 // 행 복제 핸들러 함수
@@ -36,8 +41,48 @@ export default function BottomActions({
   disableActions,
   rows,
   onClearSelection,
+  onUpdateRows,
 }: BottomActionsProps) {
   const buttonClass = "px-6 py-2 " + highTechStyle;
+  const [isTranslating, setIsTranslating] = useState(false);
+
+  // 전체 번역 핸들러
+  const handleBulkTranslate = async () => {
+    if (isLocked || disableActions || isTranslating) return;
+
+    try {
+      setIsTranslating(true);
+      const translatedItems = await bulkTranslate(rows);
+
+      if (!translatedItems || translatedItems.length === 0) {
+        alert("번역할 미검수 항목이 없습니다.");
+        return;
+      }
+
+      // 번역된 항목들로 rows 업데이트
+      const updatedRows = rows.map((row) => {
+        const translatedItem = translatedItems.find(
+          (item) => item.koreanWord === row.koreanWord
+        );
+        if (translatedItem) {
+          return {
+            ...row,
+            englishTranslation: translatedItem.englishTranslation,
+            arabicTranslation: translatedItem.arabicTranslation,
+          };
+        }
+        return row;
+      });
+
+      onUpdateRows(updatedRows); // 부모 컴포넌트의 상태 업데이트
+      alert(`${translatedItems.length}개의 미검수 항목 번역이 완료되었습니다.`);
+    } catch (error: any) {
+      console.error("Bulk translation error:", error);
+      alert(error?.message || "전체 번역 중 오류가 발생했습니다.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
 
   // 번역 데이터 저장 핸들러
   const handleSave = async () => {
@@ -125,6 +170,21 @@ export default function BottomActions({
             >
               <FaDatabase className={ICON_CLASS} />
               DB저장
+            </button>
+
+            {/* 전체 번역 버튼 */}
+            <button
+              type="button"
+              onClick={handleBulkTranslate}
+              disabled={isLocked || disableActions || isTranslating}
+              className={`${buttonClass} ${
+                isLocked || disableActions || isTranslating
+                  ? BUTTON_DISABLED_CLASS
+                  : BUTTON_ENABLED_CLASS
+              }`}
+            >
+              <FaLanguage className={ICON_CLASS} />
+              {isTranslating ? "번역 중..." : "미검수 항목 전체 번역"}
             </button>
           </div>
           {/* 다운로드 버튼 */}

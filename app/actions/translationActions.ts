@@ -2,6 +2,7 @@
 "use server";
 
 import { Octokit } from "@octokit/rest";
+import { Translation } from "@/types/translate";
 
 // 번역 입력 인터페이스
 interface TranslationInput {
@@ -126,5 +127,33 @@ export async function saveTranslations(data: TranslationData) {
   } catch (error) {
     console.error("Translation save error:", error);
     throw new Error("번역 데이터 저장 실패");
+  }
+}
+
+export async function bulkTranslate(items: Translation[]) {
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/translate/bulk`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ items }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Network response was not ok");
+    }
+
+    const result = await response.json();
+    if (!result.success) {
+      throw new Error(result.error || "Translation failed");
+    }
+    return result.data;
+  } catch (error) {
+    console.error("Error in bulk translation:", error);
+    throw error;
   }
 }

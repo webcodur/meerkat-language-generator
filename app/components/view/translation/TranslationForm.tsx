@@ -129,14 +129,14 @@ export default function TranslationForm() {
     totalRows > 0 ? (translatedCount / totalRows) * 100 : 0;
 
   return (
-    <div className="flex justify-center w-full min-h-screen bg-gray-50 p-4">
+    <div className="flex justify-center w-full min-h-screen p-4 bg-gray-50">
       <div className="w-full max-w-[1400px]">
-        <div className="relative p-6 pb-32 bg-white border rounded-lg shadow-sm overflow-hidden">
+        <div className="relative p-6 pb-32 overflow-hidden bg-white border rounded-lg shadow-sm">
           {/* 테이블 헤더 */}
           <TableHeader />
 
           <div className="relative overflow-visible">
-            <div className="min-w-max relative">
+            <div className="relative min-w-max">
               {/* 행 이동 미리보기 */}
               {selectedRows.length > 0 && (
                 <DragHandle
@@ -173,22 +173,22 @@ export default function TranslationForm() {
 
           {/* 하단 액션 버튼 */}
           <BottomActions
-            onDuplicate={() =>
-              setRows((prevRows) => {
-                const newRow: Translation = {
-                  koreanWord: "",
-                  koreanDescription: "",
-                  englishTranslation: "",
-                  arabicTranslation: "",
-                  isVerified: false,
-                };
-                return [...prevRows, newRow];
-              })
-            }
+            onDuplicate={() => {
+              const timestamp = new Date().getTime();
+              const newRow: Translation = {
+                koreanWord: `임시_${timestamp}`,
+                arabicTranslation: "",
+                englishTranslation: "",
+                isVerified: false,
+                koreanDescription: "",
+              };
+              setRows([...rows, newRow]);
+            }}
             isLocked={isLocked}
             disableActions={selectedRows.length > 0}
             rows={rows}
             onClearSelection={() => setSelectedRows([])}
+            onUpdateRows={setRows}
           />
 
           {/* 비밀번호 버튼 */}
