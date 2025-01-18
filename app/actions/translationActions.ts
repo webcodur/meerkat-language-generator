@@ -11,7 +11,7 @@ interface TranslationInput {
 
 // 번역 응답 인터페이스
 interface TranslationResponse {
-  englishKey: string; // 영어 키값
+  koreanWord: string; // 한국어 키값
   en: string; // 영어 번역문
   ar: string; // 아랍어 번역문
 }

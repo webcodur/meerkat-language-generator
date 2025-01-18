@@ -8,30 +8,15 @@ import {
 const processTranslationData = (translationData: any): Translation[] => {
   const existingRows: Translation[] = [];
 
-  // 한국어 데이터의 키를 기준으로 Translation 객체 생성
-  Object.keys(translationData.ko).forEach((key) => {
+  // 한국어 데이터를 기준으로 Translation 객체 생성
+  Object.keys(translationData.ko).forEach((koreanWord) => {
     existingRows.push({
-      koreanWord: translationData.ko[key] || "",
-      koreanDescription: translationData.descriptions[key] || "",
-      englishKey: key,
-      englishTranslation: translationData.en[key] || "",
-      arabicTranslation: translationData.ar[key] || "",
-      isVerified: translationData.isVerified?.[key] || false,
+      koreanWord: koreanWord, // 한국어 단어가 이제 키가 됨
+      koreanDescription: translationData.descriptions[koreanWord] || "",
+      englishTranslation: translationData.en[koreanWord] || "",
+      arabicTranslation: translationData.ar[koreanWord] || "",
+      isVerified: translationData.isVerified?.[koreanWord] || false,
     });
-  });
-
-  // 영어 데이터에만 존재하는 키에 대한 Translation 객체 생성
-  Object.keys(translationData.en).forEach((key) => {
-    if (!existingRows.find((row) => row.englishKey === key)) {
-      existingRows.push({
-        koreanWord: translationData.ko[key] || "",
-        koreanDescription: translationData.descriptions[key] || "",
-        englishKey: key,
-        englishTranslation: translationData.en[key] || "",
-        arabicTranslation: translationData.ar[key] || "",
-        isVerified: translationData.isVerified?.[key] || false,
-      });
-    }
   });
 
   return existingRows;
@@ -42,7 +27,6 @@ export default function useTranslations() {
     {
       koreanWord: "",
       koreanDescription: "",
-      englishKey: "",
       englishTranslation: "",
       arabicTranslation: "",
       isVerified: false,
@@ -67,7 +51,6 @@ export default function useTranslations() {
         existingRows.push({
           koreanWord: "",
           koreanDescription: "",
-          englishKey: "",
           englishTranslation: "",
           arabicTranslation: "",
           isVerified: false,
@@ -98,7 +81,6 @@ export default function useTranslations() {
       const newRows = [...rows];
       newRows[index] = {
         ...newRows[index],
-        englishKey: response.englishKey,
         englishTranslation: response.en,
         arabicTranslation: response.ar,
       };
@@ -115,7 +97,6 @@ export default function useTranslations() {
     const emptyRow: Translation = {
       koreanWord: "",
       koreanDescription: "",
-      englishKey: "",
       englishTranslation: "",
       arabicTranslation: "",
       isVerified: false,
