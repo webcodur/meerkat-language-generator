@@ -64,5 +64,6 @@
   },
 
   "git.confirmSync": false,
-  "git.autofetch": true
+  "git.autofetch": true,
+  "npm.packageManager": "auto"
 }
