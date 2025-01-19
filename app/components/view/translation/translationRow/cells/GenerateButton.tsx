@@ -1,5 +1,5 @@
-import { COLUMNS } from "@/data/constant/columns";
 import { Translation } from "@/types/translate";
+import { COLUMNS } from "@/data/constant/columns";
 
 interface GenerateButtonProps {
   row: Translation;
@@ -16,13 +16,14 @@ export default function GenerateButton({
 }: GenerateButtonProps) {
   const isLoading = loadingRows[index];
   const isDisabled = !row.koreanWord || row.isVerified;
+  const buttonWidth = COLUMNS.find((col) => col.type === "button")?.width;
 
   return (
     <div
       style={{
-        width: COLUMNS[4].width,
-        minWidth: COLUMNS[4].width,
-        maxWidth: COLUMNS[4].width,
+        width: buttonWidth,
+        minWidth: buttonWidth,
+        maxWidth: buttonWidth,
       }}
       className="flex items-center justify-center"
     >
@@ -36,7 +37,7 @@ export default function GenerateButton({
         }`}
       >
         {isLoading ? (
-          <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-blue-600 rounded-full border-t-transparent animate-spin" />
         ) : (
           <svg
             className="w-4 h-4"

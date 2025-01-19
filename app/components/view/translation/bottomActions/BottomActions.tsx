@@ -16,12 +16,14 @@ interface BottomActionsProps {
   rows: Translation[]; // 번역 데이터 배열
   onClearSelection?: () => void; // 선택 해제 핸들러 함수
   onUpdateRows: (updatedRows: Translation[]) => void; // 새로운 prop 추가
+  onSave: () => Promise<void>; // 저장 핸들러 prop 추가
 }
 
 // 행 복제 핸들러 함수
 const handleDuplicate = (rows: Translation[]) => {
   const timestamp = new Date().getTime();
   const newRow: Translation = {
+    key: `key_${timestamp}`,
     koreanWord: `임시_${timestamp}`,
     arabicTranslation: "",
     englishTranslation: "",
@@ -42,6 +44,7 @@ export default function BottomActions({
   rows,
   onClearSelection,
   onUpdateRows,
+  onSave,
 }: BottomActionsProps) {
   const buttonClass = "px-6 py-2 " + highTechStyle;
   const [isTranslating, setIsTranslating] = useState(false);
@@ -162,10 +165,10 @@ export default function BottomActions({
             {/* DB저장 버튼 */}
             <button
               type="button"
-              onClick={handleSave}
-              disabled={isLocked}
+              onClick={onSave}
+              disabled={isLocked || disableActions}
               className={`${buttonClass} ${
-                isLocked ? BUTTON_DISABLED_CLASS : BUTTON_ENABLED_CLASS
+                isLocked || disableActions ? BUTTON_DISABLED_CLASS : BUTTON_ENABLED_CLASS
               }`}
             >
               <FaDatabase className={ICON_CLASS} />

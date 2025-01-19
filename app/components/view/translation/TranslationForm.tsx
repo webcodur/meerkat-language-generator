@@ -13,6 +13,7 @@ import ErrorState from "@/app/components/ui/ErrorState";
 import useTranslations from "@/hooks/useTranslations";
 import useRowSelection from "@/hooks/useRowSelection";
 import usePasswordLock from "@/hooks/usePasswordLock";
+import { TOTAL_WIDTH } from "@/data/constant/columnWidths";
 
 const getRowStyle = (
   index: number,
@@ -22,18 +23,11 @@ const getRowStyle = (
   const isSelected = selectedRows.includes(index);
   const style: React.CSSProperties = {};
 
-  if (isSelected) {
-    style.backgroundColor = "rgba(59, 130, 246, 0.1)";
-  }
+  if (isSelected) style.backgroundColor = "rgba(59, 130, 246, 0.1)";
 
   if (previewMove) {
-    if (selectedRows.includes(index)) {
-      style.opacity = "0.5";
-    }
-
-    if (previewMove.toIndex === index) {
-      style.borderTop = "2px solid #3b82f6";
-    }
+    if (selectedRows.includes(index)) style.opacity = "0.5";
+    if (previewMove.toIndex === index) style.borderTop = "2px solid #3b82f6";
   }
 
   return style;
@@ -48,6 +42,7 @@ export default function TranslationForm() {
     error,
     loadTranslationData,
     handleSubmit,
+    handleSave,
     handleDuplicate,
     handleDelete,
   } = useTranslations();
@@ -114,7 +109,6 @@ export default function TranslationForm() {
   };
 
   // 로딩 중이거나 에러 상태일 때의 렌더링
-  // if (true) return <LoadingState />;
   if (isLoading) return <LoadingState />;
   if (error)
     return <ErrorState error={error} onRefresh={loadTranslationData} />;
@@ -129,9 +123,12 @@ export default function TranslationForm() {
     totalRows > 0 ? (translatedCount / totalRows) * 100 : 0;
 
   return (
-    <div className="flex justify-center w-full min-h-screen p-4 bg-gray-50">
-      <div className="w-full max-w-[1400px]">
-        <div className="relative p-6 pb-32 overflow-hidden bg-white border rounded-lg shadow-sm">
+    <div className="flex flex-col w-full flex-1 bg-gray-50">
+      <div className="w-full flex-1 flex justify-center">
+        <div
+          className="relative p-6 pb-32 bg-white border rounded-lg shadow-sm"
+          style={{ width: `${TOTAL_WIDTH}px` }}
+        >
           {/* 테이블 헤더 */}
           <TableHeader />
 
@@ -173,22 +170,13 @@ export default function TranslationForm() {
 
           {/* 하단 액션 버튼 */}
           <BottomActions
-            onDuplicate={() => {
-              const timestamp = new Date().getTime();
-              const newRow: Translation = {
-                koreanWord: `임시_${timestamp}`,
-                arabicTranslation: "",
-                englishTranslation: "",
-                isVerified: false,
-                koreanDescription: "",
-              };
-              setRows([...rows, newRow]);
-            }}
+            onDuplicate={handleDuplicate}
             isLocked={isLocked}
             disableActions={selectedRows.length > 0}
             rows={rows}
             onClearSelection={() => setSelectedRows([])}
             onUpdateRows={setRows}
+            onSave={handleSave}
           />
 
           {/* 비밀번호 버튼 */}
@@ -207,21 +195,22 @@ export default function TranslationForm() {
             />
           )}
         </div>
+      </div>
 
-        {/* 통계 */}
-        <div className="fixed bottom-0 left-0 right-0 m-6">
-          <div className="mx-auto max-w-[1400px]">
-            <div className="p-4 bg-white border rounded-lg shadow-sm">
-              <div className="flex flex-col space-y-2">
-                <div className="flex justify-between w-full">
-                  <p className="text-lg">번역 완료 비율:</p>
-                  <p className="text-lg">{completionRate.toFixed(2)}%</p>
-                </div>
-                <div className="flex justify-between w-full">
-                  <p className="text-lg">미번역 항목 수:</p>
-                  <p className="text-lg">{untranslatedCount}</p>
-                </div>
-              </div>
+      {/* 통계 부분도 같은 너비로 조정 */}
+      <div className="fixed bottom-0 left-0 right-0 m-6 flex justify-center">
+        <div
+          className="p-4 bg-white border rounded-lg shadow-sm"
+          style={{ width: `${TOTAL_WIDTH}px` }}
+        >
+          <div className="flex flex-col space-y-2">
+            <div className="flex justify-between w-full">
+              <p className="text-lg">번역 완료 비율:</p>
+              <p className="text-lg">{completionRate.toFixed(2)}%</p>
+            </div>
+            <div className="flex justify-between w-full">
+              <p className="text-lg">미번역 항목 수:</p>
+              <p className="text-lg">{untranslatedCount}</p>
             </div>
           </div>
         </div>

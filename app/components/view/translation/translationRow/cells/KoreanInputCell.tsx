@@ -1,47 +1,32 @@
-import { COLUMN_WIDTHS } from "@/data/constant/columnWidths";
 import { Translation } from "@/types/translate";
 import { commonInputStyle } from "../styles";
+import { COLUMNS } from "@/data/constant/columns";
 
 interface KoreanInputCellProps {
   row: Translation;
   index: number;
   onUpdate: (index: number, updatedRow: Translation) => void;
-  type: "word" | "description";
+  type?: "koreanWord" | "koreanDescription";
 }
 
 export default function KoreanInputCell({
   row,
   index,
   onUpdate,
-  type,
+  type = "koreanWord",
 }: KoreanInputCellProps) {
-  const width =
-    type === "word"
-      ? COLUMN_WIDTHS.koreanWord
-      : COLUMN_WIDTHS.koreanDescription;
-  const value = type === "word" ? row.koreanWord : row.koreanDescription;
+  const handleChange = (value: string) => {
+    onUpdate(index, { ...row, [type]: value });
+  };
 
   return (
-    <div
-      className="flex items-center space-x-1"
-      style={{
-        width,
-        minWidth: width,
-        maxWidth: width,
-      }}
-    >
-      <textarea
-        value={value}
-        onChange={(e) =>
-          onUpdate(index, {
-            ...row,
-            [type === "word" ? "koreanWord" : "koreanDescription"]:
-              e.target.value,
-          })
-        }
-        className={`${commonInputStyle} resize-none min-h-[38px] overflow-hidden flex-1`}
-        rows={1}
-      />
-    </div>
+    <input
+      type="text"
+      value={row[type]}
+      onChange={(e) => handleChange(e.target.value)}
+      className={commonInputStyle}
+      style={{ width: COLUMNS.find((col) => col.type === type)?.width }}
+      placeholder={type === "koreanWord" ? "한국어 입력" : "설명 입력"}
+    />
   );
 }

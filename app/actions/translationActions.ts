@@ -50,11 +50,12 @@ export async function generateTranslations(
 
 // 전체 번역 데이터 구조 인터페이스
 interface TranslationData {
-  ko: Record<string, string>; // 한국어 번역 데이터
-  en: Record<string, string>; // 영어 번역 데이터
-  ar: Record<string, string>; // 아랍어 번역 데이터
-  descriptions: Record<string, string>; // 번역 설명 데이터
-  isVerified?: Record<string, boolean>; // 번역 검증 상태
+  keys: Record<string, string>; // 키값 데이터
+  ko: Record<string, string>; // 한국어 데이터
+  en: Record<string, string>; // 영어 데이터
+  ar: Record<string, string>; // 아랍어 데이터
+  descriptions: Record<string, string>;
+  isVerified?: Record<string, boolean>;
 }
 
 /**
@@ -73,9 +74,11 @@ export async function loadTranslations(): Promise<TranslationData> {
     }
 
     const files = response.data.files;
+    console.log("files, files");
 
     // 각 언어별 JSON 파일 파싱
     return {
+      keys: JSON.parse(files["keys.json"]?.content || "{}"),
       ko: JSON.parse(files["ko.json"]?.content || "{}"),
       en: JSON.parse(files["en.json"]?.content || "{}"),
       ar: JSON.parse(files["ar.json"]?.content || "{}"),
@@ -83,7 +86,6 @@ export async function loadTranslations(): Promise<TranslationData> {
       isVerified: JSON.parse(files["verification.json"]?.content || "{}"),
     };
   } catch (error) {
-    console.error("Translation load error:", error);
     throw new Error("번역 데이터 로딩 실패");
   }
 }
@@ -93,29 +95,73 @@ export async function loadTranslations(): Promise<TranslationData> {
  * @param data 저장할 번역 데이터
  * @returns 성공 여부
  */
-export async function saveTranslations(data: TranslationData) {
+export async function saveTranslations(translations: Translation[]) {
   try {
-    // 검증 상태 데이터 생성
-    const verificationData: Record<string, boolean> = {};
-    Object.keys(data.ko).forEach((key) => {
-      verificationData[key] = data.isVerified?.[key] || false;
-    });
+    const data: TranslationData = translations.reduce(
+      (acc, translation) => ({
+        keys: { ...acc.keys, [translation.key]: translation.key },
+        ko: { ...acc.ko, [translation.key]: translation.koreanWord },
+        en: { ...acc.en, [translation.key]: translation.englishTranslation },
+        ar: { ...acc.ar, [translation.key]: translation.arabicTranslation },
+        descriptions: {
+          ...acc.descriptions,
+          [translation.key]: translation.koreanDescription,
+        },
+        isVerified: {
+          ...acc.isVerified,
+          [translation.key]: translation.isVerified,
+        },
+      }),
+      { keys: {}, ko: {}, en: {}, ar: {}, descriptions: {}, isVerified: {} }
+    );
 
-    // Gist 업데이트
+    // 기존 저장 로직 사용
+    return await saveToGist(data);
+  } catch (error) {
+    console.error("Translation save error:", error);
+    throw new Error("번역 데이터 저장 실패");
+  }
+}
+
+// 기존 함수 이름 변경
+async function saveToGist(data: TranslationData) {
+  try {
+    const verificationData: Record<string, boolean> = {};
+    // Translation 객체들의 key 필드를 기준으로 데이터 구성
+    const translationData = Object.entries(data.keys).reduce(
+      (acc, [key, _]) => {
+        verificationData[key] = data.isVerified?.[key] || false;
+        return {
+          keys: { ...acc.keys, [key]: key },
+          ko: { ...acc.ko, [key]: data.ko[key] || "" },
+          en: { ...acc.en, [key]: data.en[key] || "" },
+          ar: { ...acc.ar, [key]: data.ar[key] || "" },
+          descriptions: {
+            ...acc.descriptions,
+            [key]: data.descriptions[key] || "",
+          },
+        };
+      },
+      { keys: {}, ko: {}, en: {}, ar: {}, descriptions: {} }
+    );
+
     await octokit.gists.update({
       gist_id: GIST_ID!,
       files: {
+        "keys.json": {
+          content: JSON.stringify(translationData.keys, null, 2),
+        },
         "ko.json": {
-          content: JSON.stringify(data.ko, null, 2),
+          content: JSON.stringify(translationData.ko, null, 2),
         },
         "en.json": {
-          content: JSON.stringify(data.en, null, 2),
+          content: JSON.stringify(translationData.en, null, 2),
         },
         "ar.json": {
-          content: JSON.stringify(data.ar, null, 2),
+          content: JSON.stringify(translationData.ar, null, 2),
         },
         "description.json": {
-          content: JSON.stringify(data.descriptions, null, 2),
+          content: JSON.stringify(translationData.descriptions, null, 2),
         },
         "verification.json": {
           content: JSON.stringify(verificationData, null, 2),

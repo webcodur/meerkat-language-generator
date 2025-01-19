@@ -3,19 +3,21 @@ import { Translation } from "@/types/translate";
 import {
   generateTranslations,
   loadTranslations,
+  saveTranslations,
 } from "@/app/actions/translationActions";
 
 const processTranslationData = (translationData: any): Translation[] => {
   const existingRows: Translation[] = [];
 
-  // 한국어 데이터를 기준으로 Translation 객체 생성
-  Object.keys(translationData.ko).forEach((koreanWord) => {
+  // keys를 기준으로 Translation 객체 생성하도록 수정
+  Object.keys(translationData.keys).forEach((key) => {
     existingRows.push({
-      koreanWord: koreanWord, // 한국어 단어가 이제 키가 됨
-      koreanDescription: translationData.descriptions[koreanWord] || "",
-      englishTranslation: translationData.en[koreanWord] || "",
-      arabicTranslation: translationData.ar[koreanWord] || "",
-      isVerified: translationData.isVerified?.[koreanWord] || false,
+      key: key, // 실제 키값 사용
+      koreanWord: translationData.ko[key] || "",
+      koreanDescription: translationData.descriptions[key] || "",
+      englishTranslation: translationData.en[key] || "",
+      arabicTranslation: translationData.ar[key] || "",
+      isVerified: translationData.isVerified?.[key] || false,
     });
   });
 
@@ -25,6 +27,7 @@ const processTranslationData = (translationData: any): Translation[] => {
 export default function useTranslations() {
   const [rows, setRows] = useState<Translation[]>([
     {
+      key: `key_${new Date().getTime()}`, // 유니크한 키 생성
       koreanWord: "",
       koreanDescription: "",
       englishTranslation: "",
@@ -45,10 +48,12 @@ export default function useTranslations() {
 
     try {
       const translationData = await loadTranslations();
+      console.log("translationData", translationData);
       const existingRows = processTranslationData(translationData);
 
       if (existingRows.length === 0) {
         existingRows.push({
+          key: `key_${new Date().getTime()}`, // 유니크한 키 생성
           koreanWord: "",
           koreanDescription: "",
           englishTranslation: "",
@@ -59,7 +64,7 @@ export default function useTranslations() {
 
       setRows(existingRows);
     } catch (error) {
-      console.error("번역 데이터 로드 중 오류 발생:", error);
+      console.error("번역 데이터 로드 중 오류 발생:");
       setError("번역 데이터를 불러오는데 실패했습니다.");
     } finally {
       setIsLoading(false);
@@ -93,8 +98,19 @@ export default function useTranslations() {
     }
   };
 
+  const handleSave = async () => {
+    try {
+      await saveTranslations(rows);
+      alert("저장되었습니다.");
+    } catch (error) {
+      console.error("저장 중 오류 발생:", error);
+      alert("저장 중 오류가 발생했습니다.");
+    }
+  };
+
   const handleDuplicate = () => {
     const emptyRow: Translation = {
+      key: `key_${new Date().getTime()}`, // 유니크한 키 생성
       koreanWord: "",
       koreanDescription: "",
       englishTranslation: "",
@@ -127,6 +143,7 @@ export default function useTranslations() {
     error,
     loadTranslationData,
     handleSubmit,
+    handleSave,
     handleDuplicate,
     handleDelete,
   };

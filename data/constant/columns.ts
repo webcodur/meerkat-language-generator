@@ -11,11 +11,8 @@ export interface ColumnConfig {
 export const COLUMNS: ColumnConfig[] = [
   { type: "checkbox", text: "선택", width: COLUMN_WIDTHS.checkbox },
   { type: "number", text: "번호", width: COLUMN_WIDTHS.number },
-  {
-    type: "koreanWord",
-    text: "한국어 단어(키값) *",
-    width: COLUMN_WIDTHS.koreanWord,
-  },
+  { type: "key", text: "키값", width: COLUMN_WIDTHS.key },
+  { type: "koreanWord", text: "한국어", width: COLUMN_WIDTHS.koreanWord },
   {
     type: "koreanDescription",
     text: "설명",

@@ -9,6 +9,7 @@ import RowNumberCell from "./cells/RowNumberCell";
 import KoreanInputCell from "./cells/KoreanInputCell";
 import GenerateButton from "./cells/GenerateButton";
 import DeleteButton from "./DeleteButton";
+import KeyInputCell from "./cells/KeyInputCell";
 
 interface TranslationRowProps {
   row: Translation;
@@ -26,7 +27,7 @@ interface TranslationRowProps {
  * 번역 행 컴포넌트 구조:
  * 1. [체크박스] - 행 선택
  * 2. [번호] - 행 번호
- * 3. [한국어 단어] - 원본 단어 입력 (키값으로 사용)
+ * 3. [키 입력과 한국어 단어 입력] - 키값으로 사용
  * 4. [한국어 설명] - 원본 설명 입력
  * 5. [생성 버튼] - 번역 생성
  * 6. [영어 번역] - 영어 번역 입력
@@ -60,12 +61,13 @@ export default function TranslationRow({
       {/* 2. 행 번호 */}
       <RowNumberCell index={index} />
 
-      {/* 3. 한국어 단어 입력 */}
+      {/* 3. 키 입력과 한국어 단어 입력 */}
+      <KeyInputCell row={row} index={index} onUpdate={onUpdate} />
       <KoreanInputCell
         row={row}
         index={index}
         onUpdate={onUpdate}
-        type="word"
+        type="koreanWord"
       />
 
       {/* 4. 한국어 설명 입력 */}
@@ -73,7 +75,7 @@ export default function TranslationRow({
         row={row}
         index={index}
         onUpdate={onUpdate}
-        type="description"
+        type="koreanDescription"
       />
 
       {/* 5. 번역 생성 버튼 */}
@@ -85,40 +87,60 @@ export default function TranslationRow({
       />
 
       {/* 6. 영어 번역 입력 */}
-      <TranslationInput
-        value={row.englishTranslation}
-        onChange={(value) =>
-          onUpdate(index, { ...row, englishTranslation: value })
-        }
-        disabled={row.isVerified}
-        language="en-US"
-        width={parseInt(COLUMNS[5].width)}
-      />
+      <div
+        style={{
+          width: COLUMNS.find((col) => col.type === "translation")?.width,
+          minWidth: COLUMNS.find((col) => col.type === "translation")?.width,
+          maxWidth: COLUMNS.find((col) => col.type === "translation")?.width,
+        }}
+      >
+        <TranslationInput
+          value={row.englishTranslation}
+          onChange={(value) =>
+            onUpdate(index, { ...row, englishTranslation: value })
+          }
+          disabled={row.isVerified}
+          language="en-US"
+          width="100%"
+        />
+      </div>
 
       {/* 7. 아랍어 번역 입력 */}
-      <TranslationInput
-        value={row.arabicTranslation}
-        onChange={(value) =>
-          onUpdate(index, { ...row, arabicTranslation: value })
-        }
-        disabled={row.isVerified}
-        language="ar-SA"
-        width={parseInt(COLUMNS[6].width)}
-        isRTL={true}
-      />
+      <div
+        style={{
+          width: COLUMNS.find((col) => col.type === "translation")?.width,
+          minWidth: COLUMNS.find((col) => col.type === "translation")?.width,
+          maxWidth: COLUMNS.find((col) => col.type === "translation")?.width,
+        }}
+      >
+        <TranslationInput
+          value={row.arabicTranslation}
+          onChange={(value) =>
+            onUpdate(index, { ...row, arabicTranslation: value })
+          }
+          disabled={row.isVerified}
+          language="ar-SA"
+          width="100%"
+          isRTL={true}
+        />
+      </div>
 
       {/* 8. 검증 체크박스 */}
       <VerificationCheckbox
         checked={row.isVerified}
         onChange={(checked) => onUpdate(index, { ...row, isVerified: checked })}
-        width={parseInt(COLUMNS[7].width)}
+        width={parseInt(
+          COLUMNS.find((col) => col.type === "button")?.width || "0"
+        )}
       />
 
       {/* 9. 삭제 버튼 */}
       <DeleteButton
         onClick={() => onDelete(index)}
         disabled={row.isVerified || disableDelete}
-        width={parseInt(COLUMNS[8].width)}
+        width={parseInt(
+          COLUMNS.find((col) => col.type === "number")?.width || "0"
+        )}
       />
     </div>
   );
