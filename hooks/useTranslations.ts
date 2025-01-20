@@ -100,7 +100,23 @@ export default function useTranslations() {
 
   const handleSave = async () => {
     try {
-      await saveTranslations(rows);
+      // Translation[] 배열을 SaveTranslationsParams 형식으로 변환
+      const data = rows.reduce(
+        (acc, row) => ({
+          keys: { ...acc.keys, [row.key]: row.key },
+          ko: { ...acc.ko, [row.key]: row.koreanWord },
+          en: { ...acc.en, [row.key]: row.englishTranslation },
+          ar: { ...acc.ar, [row.key]: row.arabicTranslation },
+          descriptions: {
+            ...acc.descriptions,
+            [row.key]: row.koreanDescription,
+          },
+          isVerified: { ...acc.isVerified, [row.key]: row.isVerified },
+        }),
+        { keys: {}, ko: {}, en: {}, ar: {}, descriptions: {}, isVerified: {} }
+      );
+
+      await saveTranslations(data);
       alert("저장되었습니다.");
     } catch (error) {
       console.error("저장 중 오류 발생:", error);

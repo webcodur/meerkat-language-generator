@@ -2,7 +2,7 @@
 "use server";
 
 import { Octokit } from "@octokit/rest";
-import { Translation } from "@/types/translate";
+import { Translation, SaveTranslationsParams } from "@/types/translate";
 
 // 번역 입력 인터페이스
 interface TranslationInput {
@@ -90,88 +90,87 @@ export async function loadTranslations(): Promise<TranslationData> {
   }
 }
 
-/**
- * 번역 데이터를 GitHub Gist에 저장합니다.
- * @param data 저장할 번역 데이터
- * @returns 성공 여부
- */
-export async function saveTranslations(translations: Translation[]) {
+async function saveToGist(data: SaveTranslationsParams) {
   try {
-    const data: TranslationData = translations.reduce(
-      (acc, translation) => ({
-        keys: { ...acc.keys, [translation.key]: translation.key },
-        ko: { ...acc.ko, [translation.key]: translation.koreanWord },
-        en: { ...acc.en, [translation.key]: translation.englishTranslation },
-        ar: { ...acc.ar, [translation.key]: translation.arabicTranslation },
-        descriptions: {
-          ...acc.descriptions,
-          [translation.key]: translation.koreanDescription,
-        },
-        isVerified: {
-          ...acc.isVerified,
-          [translation.key]: translation.isVerified,
-        },
-      }),
-      { keys: {}, ko: {}, en: {}, ar: {}, descriptions: {}, isVerified: {} }
-    );
+    if (!GIST_ID) {
+      throw new Error("GIST_ID가 설정되지 않았습니다.");
+    }
 
-    // 기존 저장 로직 사용
-    return await saveToGist(data);
-  } catch (error) {
-    console.error("Translation save error:", error);
-    throw new Error("번역 데이터 저장 실패");
-  }
-}
+    console.log("Saving data to Gist...", {
+      koCount: Object.keys(data.ko).length,
+      enCount: Object.keys(data.en).length,
+      arCount: Object.keys(data.ar).length,
+    });
 
-// 기존 함수 이름 변경
-async function saveToGist(data: TranslationData) {
-  try {
-    const verificationData: Record<string, boolean> = {};
-    // Translation 객체들의 key 필드를 기준으로 데이터 구성
-    const translationData = Object.entries(data.keys).reduce(
-      (acc, [key, _]) => {
-        verificationData[key] = data.isVerified?.[key] || false;
-        return {
-          keys: { ...acc.keys, [key]: key },
-          ko: { ...acc.ko, [key]: data.ko[key] || "" },
-          en: { ...acc.en, [key]: data.en[key] || "" },
-          ar: { ...acc.ar, [key]: data.ar[key] || "" },
-          descriptions: {
-            ...acc.descriptions,
-            [key]: data.descriptions[key] || "",
-          },
-        };
+    // verification 데이터 안전하게 처리
+    const verificationData = data.isVerified || {};
+
+    // 번역 데이터 안전하게 변환
+    const translationData = Object.keys(data.ko).reduce(
+      (acc, key) => {
+        // 키가 존재하는 경우에만 데이터 추가
+        if (key.trim()) {
+          return {
+            keys: { ...acc.keys, [key]: key },
+            ko: { ...acc.ko, [key]: data.ko[key] || key }, // 최소한 key값은 유지
+            en: { ...acc.en, [key]: data.en[key] || "" },
+            ar: { ...acc.ar, [key]: data.ar[key] || "" },
+            descriptions: {
+              ...acc.descriptions,
+              [key]: data.descriptions[key] || "",
+            },
+          };
+        }
+        return acc;
       },
       { keys: {}, ko: {}, en: {}, ar: {}, descriptions: {} }
     );
 
-    await octokit.gists.update({
-      gist_id: GIST_ID!,
-      files: {
-        "keys.json": {
-          content: JSON.stringify(translationData.keys, null, 2),
-        },
-        "ko.json": {
-          content: JSON.stringify(translationData.ko, null, 2),
-        },
-        "en.json": {
-          content: JSON.stringify(translationData.en, null, 2),
-        },
-        "ar.json": {
-          content: JSON.stringify(translationData.ar, null, 2),
-        },
-        "description.json": {
-          content: JSON.stringify(translationData.descriptions, null, 2),
-        },
-        "verification.json": {
-          content: JSON.stringify(verificationData, null, 2),
-        },
-      },
+    console.log("Processed translation data:", {
+      keysCount: Object.keys(translationData.keys).length,
+      koCount: Object.keys(translationData.ko).length,
+      enCount: Object.keys(translationData.en).length,
+      arCount: Object.keys(translationData.ar).length,
     });
+
+    const files = {
+      "keys.json": {
+        content: JSON.stringify(translationData.keys, null, 2),
+      },
+      "ko.json": {
+        content: JSON.stringify(translationData.ko, null, 2),
+      },
+      "en.json": {
+        content: JSON.stringify(translationData.en, null, 2),
+      },
+      "ar.json": {
+        content: JSON.stringify(translationData.ar, null, 2),
+      },
+      "description.json": {
+        content: JSON.stringify(translationData.descriptions, null, 2),
+      },
+      "verification.json": {
+        content: JSON.stringify(verificationData, null, 2),
+      },
+    };
+
+    console.log("Updating Gist...");
+    const response = await octokit.gists.update({
+      gist_id: GIST_ID,
+      files,
+    });
+
+    console.log("Gist update response status:", response.status);
+    if (response.status !== 200) {
+      throw new Error(`Gist 업데이트 실패: HTTP ${response.status}`);
+    }
 
     return { success: true };
   } catch (error) {
     console.error("Translation save error:", error);
+    if (error instanceof Error) {
+      throw new Error(`번역 데이터 저장 실패: ${error.message}`);
+    }
     throw new Error("번역 데이터 저장 실패");
   }
 }
@@ -201,5 +200,15 @@ export async function bulkTranslate(items: Translation[]) {
   } catch (error) {
     console.error("Error in bulk translation:", error);
     throw error;
+  }
+}
+
+export async function saveTranslations(data: SaveTranslationsParams) {
+  try {
+    // 기존 저장 로직 사용
+    return await saveToGist(data);
+  } catch (error) {
+    console.error("Translation save error:", error);
+    throw new Error("번역 데이터 저장 실패");
   }
 }

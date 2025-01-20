@@ -3,7 +3,6 @@ import { Translation } from "@/types/translate";
 import { COLUMNS } from "@/data/constant/columns";
 import TranslationInput from "./TranslationInput";
 import VerificationCheckbox from "./VerificationCheckbox";
-import { commonInputStyle } from "./styles";
 import CheckboxCell from "./cells/CheckboxCell";
 import RowNumberCell from "./cells/RowNumberCell";
 import KoreanInputCell from "./cells/KoreanInputCell";
@@ -101,7 +100,9 @@ export default function TranslationRow({
           }
           disabled={row.isVerified}
           language="en-US"
-          width="100%"
+          width={parseInt(
+            COLUMNS.find((col) => col.type === "translation")?.width || "0"
+          )}
         />
       </div>
 
@@ -120,7 +121,9 @@ export default function TranslationRow({
           }
           disabled={row.isVerified}
           language="ar-SA"
-          width="100%"
+          width={parseInt(
+            COLUMNS.find((col) => col.type === "translation")?.width || "0"
+          )}
           isRTL={true}
         />
       </div>
