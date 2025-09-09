@@ -1,6 +1,0 @@
-
-Frontend: nextjs
-Backend: nextjs
-DataBase: gist
-INFRA: cafe24
-정보 저장: 
